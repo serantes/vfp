@@ -1,0 +1,10 @@
+*.bak
+*.tbk
+*.fxp
+*.err
+*.exe
+*.mpr
+*.mpx
+*.xls
+*.log
+_*.*
