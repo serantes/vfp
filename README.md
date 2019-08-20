@@ -1,5 +1,7 @@
 # VFP Stuff
 
+Several VFP stuff.
+
 File | Description
 :---  | :---
 ClassMnrgGridDemo.scx | A demo form for MngrGrid class.
