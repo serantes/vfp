@@ -9,3 +9,5 @@
 *.log
 _*.*
 Thumbs.*
+third-parties/vfplang.txt
+third-parties/vfplang.xml

@@ -1,8 +1,9 @@
 * SOURCE: https://blogs.msdn.microsoft.com/calvin_hsia/2005/08/19/foxpro-language-into-a-table/
 * 
 * CHANGES:
-*	- Try with ole automation.
+*	- Try..EndTry with ole automation.
 *   - Generated files destination changed.
+*	- Fix with Alanguage() array dimensions.
 
 CREATE CURSOR lang (word c(30), stuff c(20))
 
@@ -12,7 +13,11 @@ FOR nType=1 to 4
 
       FOR i = 1  to n
 
-            INSERT INTO lang VALUES (aa[i],"")
+			If (nType = 2)
+	            INSERT INTO lang VALUES (aa[i,1],aa[i,2])
+	        Else
+	            INSERT INTO lang VALUES (aa[i],"")
+	        EndIf
 
             IF nType= 3 AND aa[i] != "Ole" && baseclasses, but not olecontrol, oleboundcontrol
 
