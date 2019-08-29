@@ -43,13 +43,13 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 	*< OBJECTDATA: ObjPath="grdDemo.Column3.Text1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="grdDemo.Column4.Header1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="grdDemo.Column4.Text1" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="btnGridElements" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="btnCicleGridElements" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="mngGrdDemo" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="btnSaveBindings" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="btnRestoreBindings" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="btnSaveSources" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="btnRestoreSources" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoEnabled" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="txtMngGrdDemoAutoSizeColumns" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="optMngGrdDemoAutoSizeMode" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="optMngGrdDemoAutoSizeColumnsMode" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoAlternateRowColorEnabled" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="optMngGrdDemoDynamicPropertiesMode" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoSortEnabled" UniqueID="" Timestamp="" />
@@ -60,6 +60,7 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 	*< OBJECTDATA: ObjPath="Text3" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Text4" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoFindBoxAlwaysVisible" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="chkMngGrdDemoAutoSizeColumnsEnabled" UniqueID="" Timestamp="" />
 
 	AutoCenter = .T.
 	Caption = "Class MngrGrid demo"
@@ -71,108 +72,122 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 	Width = 600
 	WindowType = 1
 
-	ADD OBJECT 'btnGridElements' AS commandbutton WITH ;
+	ADD OBJECT 'btnCicleGridElements' AS commandbutton WITH ;
 		Anchor = 6, ;
-		Caption = "\<Grid elements", ;
+		Caption = "\<Cicle Grid elements", ;
 		Height = 27, ;
 		Left = 10, ;
-		Name = "btnGridElements", ;
+		Name = "btnCicleGridElements", ;
 		TabIndex = 5, ;
 		ToolTipText = "Grid elements cicle ", ;
-		Top = 310, ;
-		Width = 110
+		Top = 300, ;
+		Width = 120
 		*< END OBJECT: BaseClass="commandbutton" />
 
-	ADD OBJECT 'btnRestoreBindings' AS commandbutton WITH ;
+	ADD OBJECT 'btnRestoreSources' AS commandbutton WITH ;
 		Anchor = 6, ;
-		Caption = "\<Restore Bindings", ;
+		Caption = "\<Restore Sources", ;
 		Height = 27, ;
 		Left = 10, ;
-		Name = "btnRestoreBindings", ;
+		Name = "btnRestoreSources", ;
 		TabIndex = 4, ;
-		Top = 280, ;
-		Width = 110
+		Top = 270, ;
+		Width = 120
 		*< END OBJECT: BaseClass="commandbutton" />
 
-	ADD OBJECT 'btnSaveBindings' AS commandbutton WITH ;
+	ADD OBJECT 'btnSaveSources' AS commandbutton WITH ;
 		Anchor = 6, ;
-		Caption = "\<Save Bindings", ;
+		Caption = "\<Save Sources", ;
 		Height = 27, ;
 		Left = 10, ;
-		Name = "btnSaveBindings", ;
+		Name = "btnSaveSources", ;
 		TabIndex = 3, ;
-		Top = 250, ;
-		Width = 110
+		Top = 240, ;
+		Width = 120
 		*< END OBJECT: BaseClass="commandbutton" />
 
 	ADD OBJECT 'chkMngGrdDemoAlternateRowColorEnabled' AS checkbox WITH ;
 		Alignment = 0, ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		Caption = "Alternate row color", ;
 		ControlSource = "Thisform.mngGrdDemo.AlternateRowColorEnabled", ;
 		Height = 17, ;
-		Left = 145, ;
+		Left = 150, ;
 		Name = "chkMngGrdDemoAlternateRowColorEnabled", ;
-		TabIndex = 11, ;
+		TabIndex = 10, ;
 		ToolTipText = "Enable or disable alternate row color", ;
-		Top = 315, ;
-		Width = 120
+		Top = 305, ;
+		Width = 119
+		*< END OBJECT: BaseClass="checkbox" />
+
+	ADD OBJECT 'chkMngGrdDemoAutoSizeColumnsEnabled' AS checkbox WITH ;
+		Alignment = 0, ;
+		Anchor = 6, ;
+		Caption = "Auto size enabled", ;
+		ControlSource = "Thisform.mngGrdDemo.AutoSizeColumnsEnabled", ;
+		Height = 17, ;
+		Left = 150, ;
+		Name = "chkMngGrdDemoAutoSizeColumnsEnabled", ;
+		TabIndex = 7, ;
+		ToolTipText = "Enable or disable grid manager", ;
+		Top = 275, ;
+		Width = 115
 		*< END OBJECT: BaseClass="checkbox" />
 
 	ADD OBJECT 'chkMngGrdDemoEnabled' AS checkbox WITH ;
 		Alignment = 0, ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		Caption = "Grid manager enabled", ;
 		ControlSource = "Thisform.mngGrdDemo.Enabled", ;
 		Height = 17, ;
-		Left = 135, ;
+		Left = 140, ;
 		Name = "chkMngGrdDemoEnabled", ;
 		TabIndex = 6, ;
 		ToolTipText = "Enable or disable grid manager", ;
-		Top = 255, ;
+		Top = 245, ;
 		Width = 145
 		*< END OBJECT: BaseClass="checkbox" />
 
 	ADD OBJECT 'chkMngGrdDemoFindBoxAlwaysVisible' AS checkbox WITH ;
 		Alignment = 0, ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		Caption = "Always visible", ;
 		ControlSource = "Thisform.mngGrdDemo.FindBoxAlwaysVisible", ;
 		Height = 17, ;
-		Left = 500, ;
+		Left = 285, ;
 		Name = "chkMngGrdDemoFindBoxAlwaysVisible", ;
-		TabIndex = 10, ;
+		TabIndex = 15, ;
 		ToolTipText = "Enable or disable column sort", ;
-		Top = 285, ;
+		Top = 365, ;
 		Width = 95
 		*< END OBJECT: BaseClass="checkbox" />
 
 	ADD OBJECT 'chkMngGrdDemoFindEnabled' AS checkbox WITH ;
 		Alignment = 0, ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		Caption = "Find enabled", ;
 		ControlSource = "Thisform.mngGrdDemo.FindEnabled", ;
 		Height = 17, ;
-		Left = 405, ;
+		Left = 150, ;
 		Name = "chkMngGrdDemoFindEnabled", ;
-		TabIndex = 9, ;
+		TabIndex = 14, ;
 		ToolTipText = "Enable or disable column sort", ;
-		Top = 285, ;
+		Top = 365, ;
 		Width = 90
 		*< END OBJECT: BaseClass="checkbox" />
 
 	ADD OBJECT 'chkMngGrdDemoSortEnabled' AS checkbox WITH ;
 		Alignment = 0, ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		Caption = "Sort enabled", ;
 		ControlSource = "Thisform.mngGrdDemo.SortEnabled", ;
 		Height = 17, ;
-		Left = 145, ;
+		Left = 150, ;
 		Name = "chkMngGrdDemoSortEnabled", ;
-		TabIndex = 13, ;
+		TabIndex = 12, ;
 		ToolTipText = "Enable or disable column sort", ;
-		Top = 345, ;
-		Width = 90
+		Top = 335, ;
+		Width = 88
 		*< END OBJECT: BaseClass="checkbox" />
 
 	ADD OBJECT 'grdDemo' AS grid WITH ;
@@ -257,7 +272,6 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 
 	ADD OBJECT 'mngGrdDemo' AS mngrgrid WITH ;
 		Anchor = 12, ;
-		autosizecolumnmode = 2, ;
 		autosizecolumns = Column1, ;
 		findenabled = .T., ;
 		Left = 565, ;
@@ -268,16 +282,16 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		Top = 180
 		*< END OBJECT: ClassLib="managers.vcx" BaseClass="container" />
 
-	ADD OBJECT 'optMngGrdDemoAutoSizeMode' AS optiongroup WITH ;
-		Anchor = 12, ;
+	ADD OBJECT 'optMngGrdDemoAutoSizeColumnsMode' AS optiongroup WITH ;
+		Anchor = 6, ;
 		AutoSize = .T., ;
 		ButtonCount = 3, ;
 		Height = 26, ;
-		Left = 145, ;
-		Name = "optMngGrdDemoAutoSizeMode", ;
-		TabIndex = 7, ;
+		Left = 285, ;
+		Name = "optMngGrdDemoAutoSizeColumnsMode", ;
+		TabIndex = 8, ;
 		ToolTipText = "AutoSizeMode", ;
-		Top = 280, ;
+		Top = 270, ;
 		Value = 1, ;
 		Width = 101, ;
 		Option1.AutoSize = .F., ;
@@ -317,14 +331,14 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		*< END OBJECT: BaseClass="optiongroup" />
 
 	ADD OBJECT 'optMngGrdDemoDynamicPropertiesMode' AS optiongroup WITH ;
-		Anchor = 12, ;
+		Anchor = 6, ;
 		ButtonCount = 3, ;
 		Height = 26, ;
 		Left = 285, ;
 		Name = "optMngGrdDemoDynamicPropertiesMode", ;
-		TabIndex = 12, ;
+		TabIndex = 11, ;
 		ToolTipText = "DynamicPropertiesMode", ;
-		Top = 310, ;
+		Top = 300, ;
 		Value = 1, ;
 		Width = 100, ;
 		Option1.AutoSize = .F., ;
@@ -365,69 +379,69 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 
 	ADD OBJECT 'Text1' AS textbox WITH ;
 		Height = 23, ;
-		Left = 12, ;
+		Left = 24, ;
 		Name = "Text1", ;
-		TabIndex = 15, ;
-		Top = 216, ;
+		TabIndex = 16, ;
+		Top = 208, ;
 		Visible = .F., ;
 		Width = 100
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'Text2' AS textbox WITH ;
 		Height = 23, ;
-		Left = 120, ;
+		Left = 132, ;
 		Name = "Text2", ;
-		TabIndex = 16, ;
-		Top = 216, ;
+		TabIndex = 17, ;
+		Top = 208, ;
 		Visible = .F., ;
 		Width = 100
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'Text3' AS textbox WITH ;
 		Height = 23, ;
-		Left = 228, ;
+		Left = 240, ;
 		Name = "Text3", ;
-		TabIndex = 17, ;
-		Top = 216, ;
+		TabIndex = 18, ;
+		Top = 208, ;
 		Visible = .F., ;
 		Width = 100
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'Text4' AS textbox WITH ;
 		Height = 23, ;
-		Left = 336, ;
+		Left = 348, ;
 		Name = "Text4", ;
-		TabIndex = 18, ;
-		Top = 216, ;
+		TabIndex = 19, ;
+		Top = 208, ;
 		Visible = .F., ;
 		Width = 100
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'txtMngGrdDemoAutoSizeColumns' AS textbox WITH ;
-		Anchor = 12, ;
+		Anchor = 14, ;
 		ControlSource = "Thisform.mngGrdDemo.AutoSizeColumns", ;
 		Height = 23, ;
-		Left = 250, ;
+		Left = 400, ;
 		Name = "txtMngGrdDemoAutoSizeColumns", ;
-		TabIndex = 8, ;
+		TabIndex = 9, ;
 		ToolTipText = "AutoSizeColumns", ;
-		Top = 280, ;
-		Width = 135
+		Top = 270, ;
+		Width = 185
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'txtMngGrdDemoSortColumns' AS textbox WITH ;
-		Anchor = 12, ;
+		Anchor = 14, ;
 		ControlSource = "Thisform.mngGrdDemo.SortColumns", ;
 		Height = 23, ;
-		Left = 250, ;
+		Left = 285, ;
 		Name = "txtMngGrdDemoSortColumns", ;
-		TabIndex = 14, ;
+		TabIndex = 13, ;
 		ToolTipText = "Sort columns list", ;
-		Top = 340, ;
-		Width = 135
+		Top = 330, ;
+		Width = 300
 		*< END OBJECT: BaseClass="textbox" />
 	
-	PROCEDURE btnGridElements.Click
+	PROCEDURE btnCicleGridElements.Click
 		Local m.oGrid As Grid
 		
 		m.oGrid = Thisform.grdDemo
@@ -450,13 +464,13 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		
 	ENDPROC
 
-	PROCEDURE btnRestoreBindings.Click
-		Thisform.mngGrdDemo.RestoreBindings()
+	PROCEDURE btnRestoreSources.Click
+		Thisform.mngGrdDemo.RestoreSources()
 		
 	ENDPROC
 
-	PROCEDURE btnSaveBindings.Click
-		Thisform.mngGrdDemo.SaveBindings()
+	PROCEDURE btnSaveSources.Click
+		Thisform.mngGrdDemo.SaveSources()
 		
 	ENDPROC
 
@@ -563,13 +577,13 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		
 	ENDPROC
 
-	PROCEDURE optMngGrdDemoAutoSizeMode.Init
-		This.Value = Thisform.mngGrdDemo.AutoSizeColumnMode + 1
+	PROCEDURE optMngGrdDemoAutoSizeColumnsMode.Init
+		This.Value = Thisform.mngGrdDemo.AutoSizeColumnsMode + 1
 		
 	ENDPROC
 
-	PROCEDURE optMngGrdDemoAutoSizeMode.InteractiveChange
-		Thisform.mngGrdDemo.AutoSizeColumnMode = This.Value - 1
+	PROCEDURE optMngGrdDemoAutoSizeColumnsMode.InteractiveChange
+		Thisform.mngGrdDemo.AutoSizeColumnsMode = This.Value - 1
 		
 	ENDPROC
 

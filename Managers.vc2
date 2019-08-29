@@ -402,7 +402,8 @@ DEFINE CLASS mngrgrid AS container
 		*m: activesortorder_access
 		*m: activesortorder_assign
 		*m: alternaterowcolorenabled_assign
-		*m: autosizecolumnmode_assign
+		*m: autosizecolumnsenabled_assign
+		*m: autosizecolumnsmode_assign
 		*m: autosizecolumns_assign
 		*m: dynamicpropertiesmode_assign
 		*m: enabled_assign
@@ -415,8 +416,8 @@ DEFINE CLASS mngrgrid AS container
 		*m: oncolumnsort		&& Column sort event. This even receives ControlSource as first parameter and, as second parameter,  'ASC' for ascending sort or 'DES' for descending sort. Event must Return .t. on success and .f. on fail.
 		*m: onfind		&& On find event.
 		*m: ongridheaderclick		&& Grid Header Click event.
-		*m: restorebindings		&& Restore a saved grid recordsource and controlsource of all columns.
-		*m: savebindings		&& Save the grid recordsource and controlsource of all columns.
+		*m: restoresources		&& Restore a saved grid recordsource and controlsource of all columns.
+		*m: savesources		&& Save the grid recordsource and controlsource of all columns.
 		*m: savprefix_assign
 		*m: sortcolumns_assign
 		*m: sortenabled_assign
@@ -428,6 +429,7 @@ DEFINE CLASS mngrgrid AS container
 		*m: _ongridmousedown		&& Grid MouseDown event.
 		*m: _ongridresize		&& Grid Resize event.
 		*m: _setalternaterowcolor		&& Set or reset AlternateRowColor.
+		*m: _setautosizecolumns		&& Set or reset auto size columns.
 		*m: _setfind		&& Set or reset find box.
 		*m: _setsort		&& Set or reset column header sort.
 		*m: _setsortcolumn		&& Set column header passed as parameter as current sort column. If no header is passed then no header is setted.
@@ -437,8 +439,9 @@ DEFINE CLASS mngrgrid AS container
 		*p: alternaterowcolorenabled		&& Alternates row color using properties AlternateRowColorOdd and AlternateRowColorEven. When this is enabled changing other properties forces a SetFocus() to associated grid.
 		*p: alternaterowcoloreven		&& Even row color
 		*p: alternaterowcolorodd		&& Odd rows color
-		*p: autosizecolumnmode		&& 0 - AutoSize all columns, 1- AutoSize all columns except columns in AutoSizeColumns, 2 - AutoSize only columns in AutoSizeColumns
 		*p: autosizecolumns		&& Comma-separated column names associated with AutosizeColumnsMode. Empty means all columns.
+		*p: autosizecolumnsenabled		&& Enable or disable autosize columns.
+		*p: autosizecolumnsmode		&& 0 - AutoSize all columns, 1- AutoSize all columns except columns in AutoSizeColumns, 2 - AutoSize only columns in AutoSizeColumns
 		*p: dynamicpropertiesmode		&& 0 - Rude, 1 - Polite, 2 - Respectful
 		*p: findboxalwaysvisible		&& Set find box as always visible.
 		*p: findenabled		&& Enable or disable find box.
@@ -468,8 +471,9 @@ DEFINE CLASS mngrgrid AS container
 	alternaterowcolorenabled = .T.		&& Alternates row color using properties AlternateRowColorOdd and AlternateRowColorEven. When this is enabled changing other properties forces a SetFocus() to associated grid.
 	alternaterowcoloreven = Rgb(220, 220, 250)		&& Even row color
 	alternaterowcolorodd = Rgb(200, 200, 250)		&& Odd rows color
-	autosizecolumnmode = 0		&& 0 - AutoSize all columns, 1- AutoSize all columns except columns in AutoSizeColumns, 2 - AutoSize only columns in AutoSizeColumns
 	autosizecolumns = 		&& Comma-separated column names associated with AutosizeColumnsMode. Empty means all columns.
+	autosizecolumnsenabled = .T.		&& Enable or disable autosize columns.
+	autosizecolumnsmode = 0		&& 0 - AutoSize all columns, 1- AutoSize all columns except columns in AutoSizeColumns, 2 - AutoSize only columns in AutoSizeColumns
 	BackColor = 0,0,0
 	BackStyle = 1
 	BorderColor = 0,0,0
@@ -581,10 +585,33 @@ DEFINE CLASS mngrgrid AS container
 		
 	ENDPROC
 
-	HIDDEN PROCEDURE autosizecolumnmode_assign
+	HIDDEN PROCEDURE autosizecolumnsenabled_assign
 		Lparameters vNewVal
 		
-		This.AutoSizeColumnMode = Iif((Vartype(m.vNewVal) = 'N') and InList(m.vNewVal, 0, 1, 2), m.vNewVal, 0)
+		If This.Enabled
+			Local oGrid As Grid
+		
+			m.oGrid = This.oGrid
+			If (Vartype(m.oGrid) = 'O') ;
+				and (m.vNewVal <> This.AutoSizeColumnsEnabled)
+		
+				If This._SetAutoSizeColumns(m.vNewVal)
+					This.AutoSizeColumnsEnabled = m.vNewVal
+					If m.vNewVal
+						This._OnGridResize()
+					EndIf
+				EndIf
+			EndIf
+		Else
+			This.AutoSizeColumnsEnabled = m.vNewVal
+		EndIf
+		
+	ENDPROC
+
+	HIDDEN PROCEDURE autosizecolumnsmode_assign
+		Lparameters vNewVal
+		
+		This.AutoSizeColumnsMode = Iif((Vartype(m.vNewVal) = 'N') and InList(m.vNewVal, 0, 1, 2), m.vNewVal, 0)
 		If This.Enabled
 			This._OnGridResize()
 		EndIf
@@ -757,7 +784,7 @@ DEFINE CLASS mngrgrid AS container
 		
 	ENDPROC
 
-	PROCEDURE restorebindings		&& Restore a saved grid recordsource and controlsource of all columns.
+	PROCEDURE restoresources		&& Restore a saved grid recordsource and controlsource of all columns.
 		Lparameters lNotRemoveSaved As Logical
 		
 		If not This.Enabled
@@ -790,7 +817,7 @@ DEFINE CLASS mngrgrid AS container
 		
 	ENDPROC
 
-	PROCEDURE savebindings		&& Save the grid recordsource and controlsource of all columns.
+	PROCEDURE savesources		&& Save the grid recordsource and controlsource of all columns.
 		Lparameters lNotCleanBinding As Logical
 		
 		If not This.Enabled
@@ -878,10 +905,10 @@ DEFINE CLASS mngrgrid AS container
 			If This.SortEnabled
 				This._SetSort(.t.)
 			EndIf
-			BindEvent(m.oGrid, 'MouseDown', This, '_OnGridMouseDown')
-			BindEvent(m.oGrid, 'Resize', This, '_OnGridResize')
-			m.oGrid.AllowAutoColumnFit = 2 && Desactivamo el AutoColumnFit.
-			This._OnGridResize()
+			If This.AutoSizeColumnsEnabled
+				This._SetAutoSizeColumns(.t.)
+				This._OnGridResize()
+			EndIf
 		EndIf
 		
 	ENDPROC
@@ -893,7 +920,7 @@ DEFINE CLASS mngrgrid AS container
 		Local lResult As Logical
 		
 		Do case
-			Case (This.AutoSizeColumnMode = 1)
+			Case (This.AutoSizeColumnsMode = 1)
 				*-- All except AutoSizeColumns
 				If Empty(This.AutoSizeColumns)
 					m.lResult = .f.
@@ -901,7 +928,7 @@ DEFINE CLASS mngrgrid AS container
 					m.lResult = (At(',' + Upper(m.oGrid.Columns(m.i).Name) + ',', ',' + Chrtran(Upper(Alltrim(This.AutoSizeColumns)), ' ', '') + ',') = 0)
 				EndIf
 			
-			Case (This.AutoSizeColumnMode = 2)
+			Case (This.AutoSizeColumnsMode = 2)
 				*-- Only AutoSizeColumns
 				If Empty(This.AutoSizeColumns)
 					m.lResult = .t.
@@ -1262,6 +1289,47 @@ DEFINE CLASS mngrgrid AS container
 		
 	ENDPROC
 
+	PROCEDURE _setautosizecolumns		&& Set or reset auto size columns.
+		Lparameters lSetAutoSizeColumns
+		
+		If not This.Enabled
+			Return
+		EndIf
+		
+		Local lResult As Logical, ;
+				oGrid As Grid
+		
+		lResult = .f.
+		m.oGrid = This.oGrid
+		If (Vartype(m.oGrid) = 'O')
+			If m.lSetAutoSizeColumns
+				*-- Save and set propoerties.
+				This.AddProperty('_OldAllowAutoColumnFit', m.oGrid.AllowAutoColumnFit)
+				m.oGrid.AllowAutoColumnFit = 2 && Deactivate AutoColumnFit.
+				This.AddProperty('_OldScrollBars', m.oGrid.ScrollBars)
+				m.oGrid.ScrollBars = ICase(m.oGrid.ScrollBars = 3, 2, m.oGrid.ScrollBars = 1, 0, m.oGrid.ScrollBars) && Only vertical scroll bar.
+		
+				BindEvent(m.oGrid, 'MouseDown', This, '_OnGridMouseDown')
+				BindEvent(m.oGrid, 'Resize', This, '_OnGridResize')
+				lResult = .t.
+			Else
+				UnBindEvents(m.oGrid, 'Resize', This, '_OnGridResize')
+				UnBindEvents(m.oGrid, 'MouseDown', This, '_OnGridMouseDown')
+		
+				*-- Restore old properties value.
+				m.oGrid.ScrollBars = This._OldScrollBars
+				RemoveProperty(This, '_OldScrollBars')
+				m.oGrid.AllowAutoColumnFit = This._OldAllowAutoColumnFit
+				RemoveProperty(This, '_OldAllowAutoColumnFit')
+		
+				lResult = .t.
+			EndIf
+		EndIf
+		
+		Return lResult
+		
+	ENDPROC
+
 	HIDDEN PROCEDURE _setfind		&& Set or reset find box.
 		Lparameters lSetFind
 		
@@ -1430,8 +1498,9 @@ DEFINE CLASS mngrgrid AS container
 		
 		m.oGrid = This.oGrid
 		If (Vartype(m.oGrid) = 'O')
-			UnBindEvents(m.oGrid, 'Resize', This, '_OnGridResize')
-			UnBindEvents(m.oGrid, 'MouseDown', This, '_OnGridMouseDown')
+			If This.AutoSizeColumnsEnabled
+				This._SetAutoSizeColumns(.f.)
+			EndIf
 			If This.SortEnabled
 				This._SetSort(.f.)
 			EndIf
