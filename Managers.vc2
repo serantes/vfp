@@ -160,13 +160,15 @@ DEFINE CLASS findbox AS container
 	PROCEDURE MouseEnter
 		Lparameters nButton, nShift, nXCoord, nYCoord
 		
-		This._MouseActivation = .t.
-		This.Active = .t.
+		If not This.Active
+			This._MouseActivation = .t.
+			This.Active = .t.
+		EndIf
 		
 	ENDPROC
 
 	PROCEDURE MouseLeave
-		LPARAMETERS nButton, nShift, nXCoord, nYCoord
+		Lparameters nButton, nShift, nXCoord, nYCoord
 		
 		If This._MouseActivation
 			This.Active = .f.
@@ -177,7 +179,8 @@ DEFINE CLASS findbox AS container
 	HIDDEN PROCEDURE visible_assign
 		Lparameters vNewVal
 		
-		This.Visible = This.AlwaysVisible or m.vNewVal
+		This.Visible = (This.AlwaysVisible or m.vNewVal)
+		This.Active = m.vNewVal
 		If m.vNewVal
 			This.txtFind.SetFocus()
 		Else
@@ -189,8 +192,6 @@ DEFINE CLASS findbox AS container
 				This.oObject.oGrid.SetFocus()
 			EndIf
 		EndIf
-		This.Active = This.Visible
-		
 		
 	ENDPROC
 
@@ -232,6 +233,11 @@ DEFINE CLASS findbox AS container
 			This.InvisibleOnLostFocus = .t.
 			Doevents
 		EndIf
+		
+	ENDPROC
+
+	PROCEDURE cmdNext.Click
+		This.Parent._Find(0)
 		
 	ENDPROC
 
@@ -284,6 +290,11 @@ DEFINE CLASS findbox AS container
 		
 	ENDPROC
 
+	PROCEDURE cmdPrevious.Click
+		This.Parent._Find(1)
+		
+	ENDPROC
+
 	PROCEDURE cmdPrevious.KeyPress
 		Lparameters nKeyCode, nShiftAltCtrl
 		
@@ -300,7 +311,6 @@ DEFINE CLASS findbox AS container
 				
 			Case (m.nKeyCode = 27) && ESC
 				This.Parent.Visible = .f.
-				This.Parent.Active = .f.
 				NoDefault
 		
 			Case (not Empty(This.Parent.FindNextKey) ;
@@ -349,7 +359,6 @@ DEFINE CLASS findbox AS container
 				
 			Case (m.nKeyCode = 27) && ESC
 				This.Parent.Visible = .f.
-				This.Parent.Active = .f.
 				NoDefault
 		
 			Case (m.nKeyCode = 13) && ENTER
@@ -1024,7 +1033,6 @@ DEFINE CLASS mngrgrid AS container
 					Case (m.nKeyCode = 27) && ESC
 						m.oGrid.SetFocus()
 						Thisform._oFindBox.Visible = .f.
-						Thisform._oFindBox.Active = .f.
 						NoDefault
 		
 					Case (m.nKeyCode = 13) && ENTER
@@ -1033,7 +1041,6 @@ DEFINE CLASS mngrgrid AS container
 		
 					Case (m.nKeyCode = This.FindKey)
 						Thisform._oFindBox.Visible = .t.
-						Thisform._oFindBox.Active = .t.
 						Thisform._oFindBox.txtFind.SetFocus()
 						NoDefault
 						
@@ -1076,7 +1083,6 @@ DEFINE CLASS mngrgrid AS container
 				Do case
 					Case (m.nKeyCode = This.FindKey)
 						Thisform._oFindBox.Visible = .t.
-						Thisform._oFindBox.Active = .t.
 						Thisform._oFindBox.txtFind.SetFocus()
 						NoDefault
 						
