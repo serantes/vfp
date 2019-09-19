@@ -411,6 +411,7 @@ DEFINE CLASS mngrgrid AS container
 		*m: autosizecolumnsenabled_assign
 		*m: autosizecolumnsmode_assign
 		*m: autosizecolumns_assign
+		*m: autosized		&& Fired before and after autosize columns event.
 		*m: dynamicpropertiesmode_assign
 		*m: enabled_assign
 		*m: findboxalwaysvisible_assign
@@ -631,6 +632,11 @@ DEFINE CLASS mngrgrid AS container
 		If This.Enabled
 			This._OnGridResize()
 		EndIf
+		
+	ENDPROC
+
+	PROCEDURE autosized		&& Fired before and after autosize columns event.
+		Lparameters nState As Integer	&& nState: 1 - Before, 2 - After.
 		
 	ENDPROC
 
@@ -1121,6 +1127,8 @@ DEFINE CLASS mngrgrid AS container
 			Return
 		EndIf
 		
+		This.Autosized(1)
+		
 		Local Old_nWhere_Out As Integer, ;
 				nLeftFirstColumn AS Integer, ;
 				nLeftEnd As Integer, ;
@@ -1224,6 +1232,8 @@ DEFINE CLASS mngrgrid AS container
 		If This.AlternateRowColorEnabled
 			m.oGrid.SetFocus()	&& Wrong refresh unless grid has focus. Use 'Help ActiveRow' for more info.
 		EndIf
+		
+		This.Autosized(2)
 		
 	ENDPROC
 
