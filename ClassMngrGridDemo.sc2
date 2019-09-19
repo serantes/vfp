@@ -55,15 +55,21 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoSortEnabled" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="txtMngGrdDemoSortColumns" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoFindEnabled" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Text1" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Text2" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Text3" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Text4" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoFindBoxAlwaysVisible" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="chkMngGrdDemoAutoSizeColumnsEnabled" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="cmdFooter" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="Line1" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="cmdFooterUpdate" UniqueID="" Timestamp="" />
+
+	*<DefinedPropArrayMethod>
+		*m: gridgetclientleftright
+		*p: controlscount
+		*a: acontrols[1,0]
+	*</DefinedPropArrayMethod>
 
 	AutoCenter = .T.
 	Caption = "Class MngrGrid demo"
+	controlscount = 0
 	DataSession = 2
 	DoCreate = .T.
 	Height = 400
@@ -190,10 +196,35 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		Width = 88
 		*< END OBJECT: BaseClass="checkbox" />
 
+	ADD OBJECT 'cmdFooter' AS commandbutton WITH ;
+		Anchor = 6, ;
+		Caption = "\<Footer", ;
+		Height = 27, ;
+		Left = 11, ;
+		Name = "cmdFooter", ;
+		TabIndex = 5, ;
+		ToolTipText = "Grid elements cicle ", ;
+		Top = 330, ;
+		Width = 120
+		*< END OBJECT: BaseClass="commandbutton" />
+
+	ADD OBJECT 'cmdFooterUpdate' AS commandbutton WITH ;
+		Anchor = 6, ;
+		Caption = "\<Footer Update", ;
+		Height = 27, ;
+		Left = 12, ;
+		Name = "cmdFooterUpdate", ;
+		TabIndex = 5, ;
+		ToolTipText = "Grid elements cicle ", ;
+		Top = 360, ;
+		Width = 120
+		*< END OBJECT: BaseClass="commandbutton" />
+
 	ADD OBJECT 'grdDemo' AS grid WITH ;
+		AllowAddNew = .T., ;
 		Anchor = 15, ;
 		ColumnCount = 4, ;
-		Height = 175, ;
+		Height = 200, ;
 		Left = 10, ;
 		Name = "grdDemo", ;
 		TabIndex = 1, ;
@@ -224,8 +255,7 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		BorderStyle = 0, ;
 		ForeColor = 0,0,0, ;
 		Margin = 0, ;
-		Name = "Text1", ;
-		ReadOnly = .F.
+		Name = "Text1"
 		*< END OBJECT: BaseClass="textbox" />
 
 	ADD OBJECT 'grdDemo.Column2.Header1' AS header WITH ;
@@ -270,6 +300,14 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		ReadOnly = .F.
 		*< END OBJECT: BaseClass="textbox" />
 
+	ADD OBJECT 'Line1' AS line WITH ;
+		Height = 0, ;
+		Left = 10, ;
+		Name = "Line1", ;
+		Top = 229, ;
+		Width = 580
+		*< END OBJECT: BaseClass="line" />
+
 	ADD OBJECT 'mngGrdDemo' AS mngrgrid WITH ;
 		Anchor = 12, ;
 		autosizecolumns = Column1, ;
@@ -279,7 +317,7 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		ogrid = Thisform.grdDemo, ;
 		sortcolumns = Column2, Column1, ;
 		TabIndex = 2, ;
-		Top = 180
+		Top = 204
 		*< END OBJECT: ClassLib="managers.vcx" BaseClass="container" />
 
 	ADD OBJECT 'optMngGrdDemoAutoSizeColumnsMode' AS optiongroup WITH ;
@@ -377,46 +415,6 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		Option3.Width = 29
 		*< END OBJECT: BaseClass="optiongroup" />
 
-	ADD OBJECT 'Text1' AS textbox WITH ;
-		Height = 23, ;
-		Left = 24, ;
-		Name = "Text1", ;
-		TabIndex = 16, ;
-		Top = 208, ;
-		Visible = .F., ;
-		Width = 100
-		*< END OBJECT: BaseClass="textbox" />
-
-	ADD OBJECT 'Text2' AS textbox WITH ;
-		Height = 23, ;
-		Left = 132, ;
-		Name = "Text2", ;
-		TabIndex = 17, ;
-		Top = 208, ;
-		Visible = .F., ;
-		Width = 100
-		*< END OBJECT: BaseClass="textbox" />
-
-	ADD OBJECT 'Text3' AS textbox WITH ;
-		Height = 23, ;
-		Left = 240, ;
-		Name = "Text3", ;
-		TabIndex = 18, ;
-		Top = 208, ;
-		Visible = .F., ;
-		Width = 100
-		*< END OBJECT: BaseClass="textbox" />
-
-	ADD OBJECT 'Text4' AS textbox WITH ;
-		Height = 23, ;
-		Left = 348, ;
-		Name = "Text4", ;
-		TabIndex = 19, ;
-		Top = 208, ;
-		Visible = .F., ;
-		Width = 100
-		*< END OBJECT: BaseClass="textbox" />
-
 	ADD OBJECT 'txtMngGrdDemoAutoSizeColumns' AS textbox WITH ;
 		Anchor = 14, ;
 		ControlSource = "Thisform.mngGrdDemo.AutoSizeColumns", ;
@@ -441,6 +439,65 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 		Width = 300
 		*< END OBJECT: BaseClass="textbox" />
 	
+	PROCEDURE gridgetclientleftright
+		Lparameters nLeft, nRight
+		
+		Local oGrid As Grid
+		
+		*m.oGrid = This.oGrid
+		m.oGrid = Thisform.grdDemo
+		
+		If (Vartype(m.oGrid) <> 'O')
+			Return
+		EndIf
+		
+		Local Old_nWhere_Out As Integer, ;
+				nWhere_Out As Integer, ;
+				nRelRow_Out As Integer, ;
+				nRelCol_Out As Integer, ;
+				nView_Out As Integer, ;
+				lResizable As Logical, ;
+				nResizableColumnCount As Integer, ;
+				nViewWidth As Integer, ;
+				nColumnWidth As Integer, ;
+				nFixedColumnsWidth AS Integer, ;
+				nColumnWidthRemanent As Integer, ;
+				nNewWidth As Integer
+		
+		*-- Calculamos la posición de la primera columna y del final del grid.
+		m.Old_nWhere_Out = -1
+		m.nLeft = -1
+		m.nRight = m.oGrid.Left + m.oGrid.Width && Inicializamos al largo más la posición izquierda.
+		For m.i = 1 To m.oGrid.Width
+			m.nWhere_Out = 0
+			m.nRelRow_Out = 0
+			m.nRelCol_Out = 0
+			m.nView_Out = 0
+			m.x = m.oGrid.Left + m.i
+			m.y = m.oGrid.Top + Int(m.oGrid.HeaderHeight/2)
+			m.oGrid.GridHitTest(m.x, m.y, @m.nWhere_Out, @m.nRelRow_Out, @m.nRelCol_Out, @m.nView_Out)
+			If (m.Old_nWhere_Out <> m.nWhere_Out)
+				m.Old_nWhere_Out = m.nWhere_Out
+				Do case
+					Case (m.nWhere_Out = 1)		&& 1 - Column header.
+		 
+						If (m.nLeft = -1)
+							m.nLeft = m.x
+						EndIf
+						
+					Case (m.nWhere_Out = 17)	&& 17 - Vertical scrollbar. 
+		 				m.nRight = m.x
+		
+					*Otherwise
+						*-- Nada.				
+				EndCase
+			EndIf
+		EndFor
+		
+		Return .t.
+		
+	ENDPROC
+
 	PROCEDURE btnCicleGridElements.Click
 		Local m.oGrid As Grid
 		
@@ -482,6 +539,203 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 	PROCEDURE chkMngGrdDemoFindEnabled.InteractiveChange
 		This.Parent.chkMngGrdDemoFindBoxAlwaysVisible.Refresh()
 		
+	ENDPROC
+
+	PROCEDURE cmdFooter.Click
+		*-- Todo:
+		*-- Hay que llamar a este código desde al autosize del manager,
+		*-- desde todos los eventos Resize() de todas las columnas
+		*-- y desde el Resize() del grid.
+		*-- Usar autoscrolled para determinar si hubo scroll y en que dirección.
+		*--
+		
+		#DEFINE	c_MNGRGRID_FOOTER_HEIGHT		25
+		#DEFINE	c_MNGRGRID_FOOTER_MARGIN_BOTTOM	1
+		#DEFINE	c_MNGRGRID_FOOTER_MARGIN_TOP	1
+		#DEFINE	c_MNGRGRID_FOOTER_BACKCOLOR		Rgb(192, 192, 192)
+		#DEFINE	c_MNGRGRID_FOOTER_FORECOLOR		Rgb(0, 0, 0)
+		
+		Local oGrid As Grid, ;
+			i As Integer, ;
+			j As Integer, ;
+			oColumn As Column, ;
+			oTextBox As TextBox, ;
+			nGriClientdRight As Integer, ;
+			nColumnLeft As Integer, ;
+			nColumnWidth As Integer
+			
+		m.oGrid = Thisform.grdDemo
+		
+		If (Thisform.ControlsCount <= 0)
+			m.oGrid.Height = m.oGrid.Height - c_MNGRGRID_FOOTER_HEIGHT
+		EndIf
+		
+		Thisform.ControlsCount = m.oGrid.ColumnCount
+		Dimension Thisform.aControls(Thisform.ControlsCount)
+		
+		Thisform.GridGetClientLeftRight(@m.nColumnLeft, @m.nGriClientdRight)
+		For m.i = 1 To m.oGrid.ColumnCount
+		
+			*-- Locate the column using position.
+			m.oColumn = .f.
+			For Each m.oColumn As Column In m.oGrid.Columns
+				If (m.oColumn.ColumnOrder = m.i)
+					Exit
+				EndIf
+			EndFor
+			
+			If (Vartype(m.oColumn) <> 'O')
+				Loop
+			EndIf
+			
+			If (Vartype(Thisform.aControls(m.i)) <> 'O')
+				Thisform.AddObject(m.oGrid.Name + m.oGrid.Columns(m.i).Name + 'Footer', 'Textbox')
+				m.oTextBox = Evaluate('Thisform.' + m.oGrid.Name + m.oGrid.Columns(m.i).Name + 'Footer')
+				If (Vartype(m.oTextBox) = 'O')
+					Thisform.aControls(m.i) = m.oTextBox
+					m.oTextBox.BackColor = c_MNGRGRID_FOOTER_BACKCOLOR
+					m.oTextBox.ForeColor = c_MNGRGRID_FOOTER_FORECOLOR
+					m.oTextBox.DisabledBackColor = c_MNGRGRID_FOOTER_BACKCOLOR
+					m.oTextBox.Height = c_MNGRGRID_FOOTER_HEIGHT - c_MNGRGRID_FOOTER_MARGIN_TOP - c_MNGRGRID_FOOTER_MARGIN_BOTTOM
+					m.oTextBox.ReadOnly = .t.
+					m.oTextBox.Visible = .f.
+					Thisform.AddProperty(m.oTextBox.Name + 'ControlSource', m.oTextBox.Name + 'ControlSource')
+					m.oTextBox.ControlSource = 'Thisform.' + m.oTextBox.Name + 'ControlSource'
+				EndIf
+			Else
+				m.oTextBox = Thisform.aControls(m.i)
+			EndIf
+		
+			If m.oColumn.Visible ;
+				and (m.i >= m.oGrid.LeftColumn)
+				
+				m.nColumnWidth = m.oColumn.Width
+				If (m.nColumnLeft + m.nColumnWidth > m.nGriClientdRight)
+					m.nColumnWidth = m.nGriClientdRight - m.nColumnLeft
+				EndIf
+				m.oTextBox.Width = Max(m.nColumnWidth, 0)
+				m.oTextBox.Left = m.nColumnLeft
+				m.nColumnLeft = m.nColumnLeft + m.oColumn.Width + 1 && Only 1, GridLineWidth affects columns width.
+				m.oTextBox.Top = m.oGrid.Top + m.oGrid.Height + c_MNGRGRID_FOOTER_MARGIN_TOP
+				m.oTextBox.Visible = (m.nColumnWidth > 5) && Avoid display a control with a size smaller than 5.
+			Else
+				m.oTextBox.Visible = .f.
+			EndIf
+		EndFor
+		
+		
+		*!*	For m.i = 1 To Thisform.ControlsCount
+		*!*		m.ControlSource = 'Thisform.' + m.oGrid.Name + m.oGrid.Columns(m.i).Name + 'Footer' + 'ControlSource'
+		*!*		If (Type(m.ControlSource) <> 'U')
+		*!*			&ControlSource = Rand()
+		*!*			Thisform.aControls(m.i).Refresh()
+		*!*		EndIf 
+		*!*	EndFor
+		
+	ENDPROC
+
+	PROCEDURE cmdFooterUpdate.Click
+		*-- Todo:
+		*-- Hay que llamar a este código desde al autosize del manager,
+		*-- desde todos los eventos Resize() de todas las columnas
+		*-- y desde el Resize() del grid.
+		*-- Usar autoscrolled para determinar si hubo scroll y en que dirección.
+		*--
+		Local oGrid As Grid, ;
+			i As Integer, ;
+			oColumn As Column, ;
+			oTextBox As TextBox, ;
+			nGriClientdRight As Integer, ;
+			nColumnLeft As Integer, ;
+			nColumnWidth As Integer
+			
+		m.oGrid = Thisform.grdDemo
+		
+		*m.Macro = m.oGrid.Columns(1).Text1.ControlSource
+		*Replace &Macro With 'X' ;
+			In m.oGrid.RecordSource
+		
+		*Thisform.grdDEmo.Columns(1).Text1.Value = 'X'
+		
+		For m.i = 1 To Thisform.ControlsCount
+			m.ControlSource = 'Thisform.' + m.oGrid.Name + m.oGrid.Columns(m.i).Name + 'Footer' + 'ControlSource'
+			If (Type(m.ControlSource) <> 'U')
+				&ControlSource = Rand()
+				Thisform.aControls(m.i).Refresh()
+			EndIf 
+		EndFor
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.AfterRowColChange
+		LParameters nColIndex
+		
+		If (Type('Thisform.cmdFooter') = 'O')
+			Thisform.cmdFooter.Click()
+		EndIf 
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column1.Moved
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column1.Resize
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column2.Moved
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column2.Resize
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column3.Moved
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column3.Resize
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column4.Moved
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Column4.Resize
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Resize
+		Thisform.cmdFooter.Click()
+		
+	ENDPROC
+
+	PROCEDURE grdDemo.Scrolled
+		Lparameters nDirection
+		
+		If InList(m.nDirection, 4, 5, 6, 7)
+			Thisform.cmdFooter.Click()
+		EndIf
+		
+	ENDPROC
+
+	PROCEDURE mngGrdDemo.autosized
+		Lparameters nState As Integer	&& nState: 1 - Before, 2 - After.
+		
+		If (m.nState = 2)
+			Thisform.cmdFooter.Click()
+		EndIf
 	ENDPROC
 
 	PROCEDURE mngGrdDemo.oncolumnsort
