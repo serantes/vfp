@@ -1294,7 +1294,7 @@ DEFINE CLASS mngrgrid AS container
 		
 	ENDPROC
 
-	PROCEDURE _setautosizecolumns		&& Set or reset auto size columns.
+	HIDDEN PROCEDURE _setautosizecolumns		&& Set or reset auto size columns.
 		Lparameters lSetAutoSizeColumns
 		
 		If not This.Enabled
