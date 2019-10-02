@@ -603,7 +603,7 @@ DEFINE CLASS frmclassmngrgriddemo AS form
 					m.oTextBox.ControlSource = 'Thisform.' + m.oTextBox.Name + 'ControlSource'
 				EndIf
 			Else
-				m.oTextBox = Thisform.aControls(m.i)
+				m.oTextBox = Evaluate('Thisform.' + m.oGrid.Name + m.oColumn.Name + 'Footer')
 			EndIf
 		
 			If m.oColumn.Visible ;
