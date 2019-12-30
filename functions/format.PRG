@@ -96,6 +96,9 @@
 #DEFINE	c_WEEKDAYS_LONG				'|Domingo|Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|'
 #DEFINE	c_WEEKDAYS_SHORT			'|D|L|M|X|J|V|S|'
 
+#DEFINE	c_DATE_EMPTY_FOR_I			'1900-01-01T00:00:00'
+#DEFINE	c_DATE_EMPTY_FOR_O			''
+
 *--
 *-- Functions
 *--
@@ -121,6 +124,7 @@ Lparameters m.Str, m.Par1, m.Par2, m.Par3, m.Par4, m.Par5, m.Par6, m.Par7, m.Par
 		m.SinPuntoDecimal As Logical, ;
 		m.Truncar As Logical, ;
 		m.PadMethod As String, ;
+		m.DateFormat As String, ;
 		m.FormatoFecha As String, ;
 		m.Modo As Integer, ;
 		m.NumTamaño As String, ;
@@ -344,29 +348,37 @@ Lparameters m.Str, m.Par1, m.Par2, m.Par3, m.Par4, m.Par5, m.Par6, m.Par7, m.Par
 				Case InList(m.ParamType, 'D', 'T')
 					Do Case
 						Case (m.DateFormat = 'o')
-							If (m.ParamType = 'D')
-								m.CurrentParam = '^' ;
-													+ Transform(Year(Evaluate(m.CurrentParam)), "@L 9999") ;
-													+ '-' + Transform(Month(Evaluate(m.CurrentParam)), "@L 99") ; 
-													+ '-' + Transform(Day(Evaluate(m.CurrentParam)), "@L 99")
+							If Empty(Evaluate(m.CurrentParam))
+								m.CurrentParam = c_DATE_EMPTY_FOR_O
 							Else
-								m.CurrentParam = '^' ;
-													+ Transform(Year(Evaluate(m.CurrentParam)), "@L 9999") ;
-													+ '-' + Transform(Month(Evaluate(m.CurrentParam)), "@L 99") ; 
-													+ '-' + Transform(Day(Evaluate(m.CurrentParam)), "@L 99") ;
-													+ ' ' ;
-													+ Transform(Hour(Evaluate(m.CurrentParam)), "@L 99") ;
-													+ ':' ;
-													+ Transform(Minute(Evaluate(m.CurrentParam)), "@L 99") ;
-													+ ':' ;
-													+ Transform(Sec(Evaluate(m.CurrentParam)), "@L 99")
+								If (m.ParamType = 'D')
+									m.CurrentParam = '^' ;
+														+ Transform(Year(Evaluate(m.CurrentParam)), "@L 9999") ;
+														+ '-' + Transform(Month(Evaluate(m.CurrentParam)), "@L 99") ; 
+														+ '-' + Transform(Day(Evaluate(m.CurrentParam)), "@L 99")
+								Else
+									m.CurrentParam = '^' ;
+														+ Transform(Year(Evaluate(m.CurrentParam)), "@L 9999") ;
+														+ '-' + Transform(Month(Evaluate(m.CurrentParam)), "@L 99") ; 
+														+ '-' + Transform(Day(Evaluate(m.CurrentParam)), "@L 99") ;
+														+ ' ' ;
+														+ Transform(Hour(Evaluate(m.CurrentParam)), "@L 99") ;
+														+ ':' ;
+														+ Transform(Minute(Evaluate(m.CurrentParam)), "@L 99") ;
+														+ ':' ;
+														+ Transform(Sec(Evaluate(m.CurrentParam)), "@L 99")
+								EndIf
 							EndIf
 							
 						Case (m.DateFormat = 'i')
-							m.CurrentParam = Ttoc(Evaluate(m.CurrentParam), 3)
-							If (m.ParamType = 'D')
-								m.CurrentParam = Left(m.CurrentParam, 10)
-							EndIf 
+							If Empty(Evaluate(m.CurrentParam))
+								m.CurrentParam = c_DATE_EMPTY_FOR_I
+							Else
+								m.CurrentParam = Ttoc(Evaluate(m.CurrentParam), 3)
+								If (m.ParamType = 'D')
+									m.CurrentParam = Left(m.CurrentParam, 10)
+								EndIf
+							EndIf
 
 						Case (m.DateFormat = 'D')
 							m.CurrentParam = StrExtract(c_WEEKDAYS_LONG, '|', '|', Dow(Evaluate(m.CurrentParam), 1))
@@ -527,13 +539,13 @@ Function _test_header
 Lparameters m.TestName
 	Clear
 	_screen.ForeColor = RGB(0,0,0)
-	? ' ' + Replicate('=', 37) 															Font 'Lucida Console' Style 'B'
-	? ' ' + '| Unit test for ' + TestName + ' |'										Font 'Lucida Console' Style 'B'
-	? ' ' + Replicate('=', 37)															Font 'Lucida Console' Style 'B'
+	? ' ' + Replicate('=', 37) 															Font 'Lucida Console', 8 Style 'B'
+	? ' ' + '| Unit test for ' + TestName + ' |'										Font 'Lucida Console', 8 Style 'B'
+	? ' ' + Replicate('=', 37)															Font 'Lucida Console', 8 Style 'B'
 	?
-	? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console'
-	? ' ' + Space(3) + '#' + ' ' + 'Test' + Space(c_COLUMN_TEST_WIDTH - Len('Test')) + ' ' + 'Result'						Font 'Lucida Console'
-	? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console'
+	? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console', 8
+	? ' ' + Space(3) + '#' + ' ' + 'Test' + Space(c_COLUMN_TEST_WIDTH - Len('Test')) + ' ' + 'Result'						Font 'Lucida Console', 8
+	? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console', 8
 EndFunc
 
 Function _test_footer
@@ -541,24 +553,24 @@ Lparameters m.aCounters, m.Seconds
 	Local m.OldDecimals
 	
 	_screen.ForeColor = RGB(0,0,0)
-	? ' ' + Replicate('-', 6 + c_COLUMN_TEST_WIDTH + c_COLUMN_RESULT_WIDTH)													Font 'Lucida Console'
+	? ' ' + Replicate('-', 6 + c_COLUMN_TEST_WIDTH + c_COLUMN_RESULT_WIDTH)													Font 'Lucida Console', 8
 	?
-	? ' Unit test finished with a '																							Font 'Lucida Console' Style 'B'
+	? ' Unit test finished with a '																							Font 'Lucida Console', 8 Style 'B'
 	If (m.aCounters(3) = 0)
 		_screen.ForeColor = RGB(100,200,0)
-		?? 'Passed'																											Font 'Lucida Console' Style 'B'
+		?? 'Passed'																											Font 'Lucida Console', 8 Style 'B'
 		_screen.ForeColor = RGB(0,0,0)
-		?? ': All ' + Transform(m.aCounters(2)) + ' test passed'															Font 'Lucida Console' Style 'B'
+		?? ': All ' + Transform(m.aCounters(2)) + ' test passed'															Font 'Lucida Console', 8 Style 'B'
 	Else
 		_screen.ForeColor = RGB(255,0,0)
-		?? 'Failed'																											Font 'Lucida Console' Style 'B'	
+		?? 'Failed'																											Font 'Lucida Console', 8 Style 'B'	
 		_screen.ForeColor = RGB(0,0,0)
-		?? ': ' + Transform(m.aCounters(3)) + ' test failed, ' + Transform(m.aCounters(2)) + ' test passed'					Font 'Lucida Console' Style 'B'
+		?? ': ' + Transform(m.aCounters(3)) + ' test failed, ' + Transform(m.aCounters(2)) + ' test passed'					Font 'Lucida Console', 8 Style 'B'
 	EndIf
-	? ' ' + c_TAB + 'Test counter: ' + Transform(m.aCounters(1)) + ' tests'													Font 'Lucida Console' Style 'B'
+	? ' ' + c_TAB + 'Test counter: ' + Transform(m.aCounters(1)) + ' tests'													Font 'Lucida Console', 8 Style 'B'
 	m.OldDecimals = Set('Decimals')
 	Set Decimals To 6
-	? ' ' + c_TAB + '   Test time: ' + Transform(m.Seconds) + ' seconds, ' + Transform(m.Seconds/m.aCounters(1)) + ' seconds for test'	Font 'Lucida Console' Style 'B'
+	? ' ' + c_TAB + '   Test time: ' + Transform(m.Seconds) + ' seconds, ' + Transform(m.Seconds/m.aCounters(1)) + ' seconds for test'	Font 'Lucida Console', 8 Style 'B'
 	Set Decimals To	m.OldDecimals
 	?
 
@@ -572,34 +584,34 @@ Lparameters m.aCounters, m.Test, m.OkResult
 		m.aCounters(2) = m.aCounters(2) + 1
 		If not m.Silent
 			_screen.ForeColor = RGB(100,200,0)
-			? ' ' + Transform(m.aCounters(1), '@L 9999') + ' ' 					Font 'Lucida Console'
+			? ' ' + Transform(m.aCounters(1), '@L 9999') + ' ' 					Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,255)
-			?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console'
+			?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(100,200,0)
-			?? 'Passed'															Font 'Lucida Console'
+			?? 'Passed'															Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(0,0,0)
-			?? ' Result: '														Font 'Lucida Console'
+			?? ' Result: '														Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,255)							
-			?? ['] + &Test + [']												Font 'Lucida Console'
+			?? ['] + &Test + [']												Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(0,0,0)
 		EndIf
 	Else
 		m.aCounters(3) = m.aCounters(3) + 1
 		If not m.Silent
 			_screen.ForeColor = RGB(255,0,0)
-			? ' ' + Transform(m.aCounters(1), '@L 9999') + ' '					Font 'Lucida Console'
+			? ' ' + Transform(m.aCounters(1), '@L 9999') + ' '					Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,255)
-			?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console'
+			?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,0)
-			?? 'Failed'															Font 'Lucida Console'
+			?? 'Failed'															Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(0,0,0)
-			?? ' Obtained: '													Font 'Lucida Console'
+			?? ' Obtained: '													Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,255)
-			?? ['] + &Test + [']												Font 'Lucida Console'
+			?? ['] + &Test + [']												Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(0,0,0)	
-			?? c_TAB + 'Expected: '												Font 'Lucida Console'
+			?? c_TAB + 'Expected: '												Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(255,0,255)
-			?? ['] + m.OkResult + [']											Font 'Lucida Console'
+			?? ['] + m.OkResult + [']											Font 'Lucida Console', 8
 			_screen.ForeColor = RGB(0,0,0)
 		EndIf
 	EndIf
@@ -659,9 +671,9 @@ Function Format_Test
 		_test_do(@m.aCounters, [Format('%s %s'                          , {^2000-01-01}, {^2000-01-01 10:01:02})]	, Dtoc({^2000-01-01}) + ' ' + Ttoc({^2000-01-01 10:01:02}))
 		_test_do(@m.aCounters, [Format('%s1:i: %s1:o:'                  , {^2000-01-01})]			, '2000-01-01 ^2000-01-01')
 		_test_do(@m.aCounters, [Format('%s1:i: %s1:o:'                  , {^2000-01-01 10:01:02})]	, '2000-01-01T10:01:02 ^2000-01-01 10:01:02')
-		_test_do(@m.aCounters, [Format('%s1:d: %s1:sd:'                 , {^2000-01-05 10:01:02})]	, 'Miércoles X')
-		_test_do(@m.aCounters, [Format('%s1:m: %s1:ms:'                 , {^2000-08-01 10:01:02})]	, 'Agosto Ago')
+		_test_do(@m.aCounters, [Format('%s1:d: %s1:sd: %s1:m: %s1:ms:'  , {^2000-08-01 10:01:02})]	, 'Martes M Agosto Ago')
 		_test_do(@m.aCounters, [Format('%s:y:-%s:ys:-%s:sy:'            , Year({^2000-01-01}), Month({^2000-01-01}), Day({^2000-01-01}))], '2000-01-01')
+		_test_do(@m.aCounters, [Format('|%s:o:| |%s:i:|'                , {}, {})]					, '|' + c_DATE_EMPTY_FOR_O + '| |' + c_DATE_EMPTY_FOR_I + '|')
 		
 		*-- \n & \t format.
 		_test_do(@m.aCounters, [Format('\n\t%s:o:\n\tIntro'             , {^2000-01-01})]			, c_ENTER + c_TAB + '^2000-01-01' + c_ENTER + c_TAB + 'Intro')
@@ -823,13 +835,13 @@ Define Class UnitTest As Custom
 	Lparameters m.TestName
 		Clear
 		_screen.ForeColor = RGB(0,0,0)
-		? ' ' + Replicate('=', 37) 															Font 'Lucida Console' Style 'B'
-		? ' ' + '| Unit test for ' + TestName + ' |'										Font 'Lucida Console' Style 'B'
-		? ' ' + Replicate('=', 37)															Font 'Lucida Console' Style 'B'
+		? ' ' + Replicate('=', 37) 															Font 'Lucida Console', 8 Style 'B'
+		? ' ' + '| Unit test for ' + TestName + ' |'										Font 'Lucida Console', 8 Style 'B'
+		? ' ' + Replicate('=', 37)															Font 'Lucida Console', 8 Style 'B'
 		?
-		? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console'
-		? ' ' + Space(3) + '#' + ' ' + 'Test' + Space(c_COLUMN_TEST_WIDTH - Len('Test')) + ' ' + 'Result'						Font 'Lucida Console'
-		? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console'
+		? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console', 8
+		? ' ' + Space(3) + '#' + ' ' + 'Test' + Space(c_COLUMN_TEST_WIDTH - Len('Test')) + ' ' + 'Result'						Font 'Lucida Console', 8
+		? ' ' + Replicate('-', 4) + ' ' + Replicate('-', c_COLUMN_TEST_WIDTH) + ' ' + Replicate('-', c_COLUMN_RESULT_WIDTH)		Font 'Lucida Console', 8
 	EndFunc
 
 	Function _test_footer
@@ -837,24 +849,24 @@ Define Class UnitTest As Custom
 		Local m.OldDecimals
 		
 		_screen.ForeColor = RGB(0,0,0)
-		? ' ' + Replicate('-', 6 + c_COLUMN_TEST_WIDTH + c_COLUMN_RESULT_WIDTH)													Font 'Lucida Console'
+		? ' ' + Replicate('-', 6 + c_COLUMN_TEST_WIDTH + c_COLUMN_RESULT_WIDTH)													Font 'Lucida Console', 8
 		?
-		? ' Unit test finished with a '																							Font 'Lucida Console' Style 'B'
+		? ' Unit test finished with a '																							Font 'Lucida Console', 8 Style 'B'
 		If (m.aCounters(3) = 0)
 			_screen.ForeColor = RGB(100,200,0)
-			?? 'Passed'																											Font 'Lucida Console' Style 'B'
+			?? 'Passed'																											Font 'Lucida Console', 8 Style 'B'
 			_screen.ForeColor = RGB(0,0,0)
-			?? ': All ' + Transform(m.aCounters(2)) + ' test passed'															Font 'Lucida Console' Style 'B'
+			?? ': All ' + Transform(m.aCounters(2)) + ' test passed'															Font 'Lucida Console', 8 Style 'B'
 		Else
 			_screen.ForeColor = RGB(255,0,0)
-			?? 'Failed'																											Font 'Lucida Console' Style 'B'	
+			?? 'Failed'																											Font 'Lucida Console', 8 Style 'B'	
 			_screen.ForeColor = RGB(0,0,0)
-			?? ': ' + Transform(m.aCounters(3)) + ' test failed, ' + Transform(m.aCounters(2)) + ' test passed'					Font 'Lucida Console' Style 'B'
+			?? ': ' + Transform(m.aCounters(3)) + ' test failed, ' + Transform(m.aCounters(2)) + ' test passed'					Font 'Lucida Console', 8 Style 'B'
 		EndIf
-		? ' ' + c_TAB + 'Test counter: ' + Transform(m.aCounters(1)) + ' tests'													Font 'Lucida Console' Style 'B'
+		? ' ' + c_TAB + 'Test counter: ' + Transform(m.aCounters(1)) + ' tests'													Font 'Lucida Console', 8 Style 'B'
 		m.OldDecimals = Set('Decimals')
 		Set Decimals To 6
-		? ' ' + c_TAB + '   Test time: ' + Transform(m.Seconds) + ' seconds, ' + Transform(m.Seconds/m.aCounters(1)) + ' seconds for test'	Font 'Lucida Console' Style 'B'
+		? ' ' + c_TAB + '   Test time: ' + Transform(m.Seconds) + ' seconds, ' + Transform(m.Seconds/m.aCounters(1)) + ' seconds for test'	Font 'Lucida Console', 8 Style 'B'
 		Set Decimals To	m.OldDecimals
 		?
 
@@ -868,34 +880,34 @@ Define Class UnitTest As Custom
 			m.aCounters(2) = m.aCounters(2) + 1
 			If not m.Silent
 				_screen.ForeColor = RGB(100,200,0)
-				? ' ' + Transform(m.aCounters(1), '@L 9999') + ' ' 					Font 'Lucida Console'
+				? ' ' + Transform(m.aCounters(1), '@L 9999') + ' ' 					Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,255)
-				?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console'
+				?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(100,200,0)
-				?? 'Passed'															Font 'Lucida Console'
+				?? 'Passed'															Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(0,0,0)
-				?? ' Result: '														Font 'Lucida Console'
+				?? ' Result: '														Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,255)							
-				?? ['] + &Test + [']												Font 'Lucida Console'
+				?? ['] + &Test + [']												Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(0,0,0)
 			EndIf
 		Else
 			m.aCounters(3) = m.aCounters(3) + 1
 			If not m.Silent
 				_screen.ForeColor = RGB(255,0,0)
-				? ' ' + Transform(m.aCounters(1), '@L 9999') + ' '					Font 'Lucida Console'
+				? ' ' + Transform(m.aCounters(1), '@L 9999') + ' '					Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,255)
-				?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console'
+				?? m.Test + Space(Max(c_COLUMN_TEST_WIDTH - Len(m.Test), 0)) + ' '	Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,0)
-				?? 'Failed'															Font 'Lucida Console'
+				?? 'Failed'															Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(0,0,0)
-				?? ' Obtained: '													Font 'Lucida Console'
+				?? ' Obtained: '													Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,255)
-				?? ['] + &Test + [']												Font 'Lucida Console'
+				?? ['] + &Test + [']												Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(0,0,0)	
-				?? c_TAB + 'Expected: '												Font 'Lucida Console'
+				?? c_TAB + 'Expected: '												Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(255,0,255)
-				?? ['] + m.OkResult + [']											Font 'Lucida Console'
+				?? ['] + m.OkResult + [']											Font 'Lucida Console', 8
 				_screen.ForeColor = RGB(0,0,0)
 			EndIf
 		EndIf
