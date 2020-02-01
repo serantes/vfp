@@ -12,8 +12,12 @@
 #                                                                             #
 ###############################################################################
 
+#TODO: detect git root or error.
+
 WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
 FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
+COMMITIDFROM="$2"
+COMMITIDTO="$3"
 
 FILEREALPATH=$(realpath "$1")
 if ! [ -f "$FILEREALPATH" ]; then
@@ -21,125 +25,211 @@ if ! [ -f "$FILEREALPATH" ]; then
     exit -1
 fi
 
-FILEDIR=$(dirname "$FILEREALPATH")
+# Temp dir creation.
+TMPVFPGITDIR=$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)
+
+# Parse filename.
+#FILEDIR=$(dirname "$FILEREALPATH")
 FILENAME=$(basename -- "$FILEREALPATH")
-FILESTEM="${FILENAME%.*}"
+#FILESTEM="${FILENAME%.*}"
 FILEEXT="${FILENAME##*.}"
-FILEEXT="${FILEEXT,,}"
+if [ "$FILENAME" == "$FILEEXT" ]; then
+	FILEEXT=""
+else
+	FILEEXT="${FILEEXT,,}"
+fi
 
-#echo $FILEREALPATH
-#echo $FILEDIR
-#echo $FILENAME
-#echo $FILESTEM
-#echo $FILEEXT
-
-case "$FILEEXT" in
-
-    prg)
-        FILEEXT2=""
-        ;;
-		
-    txt)
-        FILEEXT2=""
-        ;;
-		
-	h)
-		FILEEXT2=""
-		;;
-
-    scx)
-        FILEEXT2="sct"
-		FILEEXT3="sc2"
-        ;;
-
-    vcx)
-        FILEEXT2="vct"
-		FILEEXT3="vc2"
-        ;;
-
-    pjx)
-        FILEEXT2="pjt"
-		FILEEXT3="pj2"
-        ;;
-
-    frx)
-        FILEEXT2="frt"
-		FILEEXT3="fr2"
-        ;;
-
-	lbx)
-        FILEEXT2="lbt"
-		FILEEXT3="lb2"
-        ;;
-
-    mnx)
-        FILEEXT2="mnt"
-		FILEEXT3="mn2"
-        ;;
-
-    dbx)
-        FILEEXT2="dbt"
-		FILEEXT3="db2"
-        ;;
+function GetFiles() {
+	local TYPE="$1"
+	local COMMITID="$2"
+	local FILEFULLPATH="$3"
+	local EXTAUX="$4"
 	
-    dcx)
-        FILEEXT2="dct"
-		FILEEXT3="dc2"
-        ;;
+	local OUTDIR="$TMPVFPGITDIR/$TYPE"
 
-    *)
-        echo "ERROR: extension not supported"
-        exit -1
-        ;;
+	local FILENAME=$(basename -- "$FILEFULLPATH")
+	local FILESTEM="${FILENAME%.*}"
+		
+	mkdir -p "$OUTDIR"
+	if [ -z "$COMMITID" ]; then
+	
+		# No COMMITID, then get local version.
+		
+		if ! [ -z "$EXTAUX" ]; then
+			#TODO: duplicate file names in diferent directories.
+			#		find $PWD/subdir -iname
+			#local FILENAMEAUX=$(basename -- $(realpath $(find $PWD -iname "$FILESTEM.$EXTAUX")))
+			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
 
-esac
+			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+				rm -Rf "$TMPVFPGITDIR"
+				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk3"
+				exit -1
+			fi
+			
+			cp "$FILENAMEAUX" "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+		fi
 
-#echo $EXT0
-#echo $EXT1
-COMMITID=$(git log --format="%H" -n 1 "$FILEREALPATH")
-if [ $? -ne 0 ] || [ -z "$COMMITID" ]; then
-    echo "ERROR: empty commit id"
-    exit -1
-fi
-#echo $COMMITID
+		cp "$FILEFULLPATH" "$OUTDIR/$FILENAME"
+		
+	else
+	
+		# Get COMMIT ID version.
+		
+		if ! [ -z "$EXTAUX" ]; then
+			#TODO: duplicate file names in diferent directories.
+			#		find $PWD/subdir -iname
+			#local FILENAMEAUX=$(basename -- $(realpath $(find $PWD -iname "$FILESTEM.$EXTAUX")))
+			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
 
-TMPVFPGITDIR="$TMP/VFPGIT/$COMMITID"
-mkdir -p "$TMPVFPGITDIR/local"
-cp "$FILENAME" "$TMPVFPGITDIR/local/$FILENAME"
-git show $COMMITID:"$FILENAME" > "$TMPVFPGITDIR/$FILENAME"
-if [ $? -ne 0 ]; then
-	rm -Rf "$TMPVFPGITDIR"
-    #echo "ERROR: file \"$FILENAME\" does not exists in git"
-    exit -1
-fi
+			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+				rm -Rf "$TMPVFPGITDIR"
+				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk."
+				exit -1
+			fi
 
-if ! [ -z "$FILEEXT2" ]; then
+			git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+		fi
 
-	FILENAME2=$(basename -- $(realpath $(find . -iname "$FILESTEM.$FILEEXT2")))
+		local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILENAME"))
+		if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+			rm -Rf "$TMPVFPGITDIR"
+			echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk.1"
+			exit -1
+		fi
 
-	if ! [ -f "$FILENAME2" ]; then
-		rm -Rf "$TMPVFPGITDIR"
-		echo "ERROR: file \"$FILENAME2\" does not exists in disk"
-		exit -1
+		git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$FILENAME"
+	
 	fi
 	
-	cp "$FILENAME2" "$TMPVFPGITDIR/local/$FILENAME2"
-    git show $COMMITID:"$FILENAME2" > "$TMPVFPGITDIR/$FILENAME2"
-	if [ $? -ne 0 ]; then
+	echo "$OUTDIR/$FILENAME"
+	
+}
+
+function GetExt() {
+	local EXTAUX=''
+	local EXTFOXBIN2PRG=''
+	
+	if [ -z "$1" ]; then
+		echo ""
+		exit 0
+	fi
+	
+	case "$1" in
+
+		prg)
+			EXTAUX=""
+			EXTFOXBIN2PRG=""
+			;;
+			
+		txt)
+			EXTAUX=""
+			EXTFOXBIN2PRG=""
+			;;
+			
+		h)
+			EXTAUX=""
+			;;
+
+		scx)
+			EXTAUX="sct"
+			EXTFOXBIN2PRG="sc2"
+			;;
+
+		vcx)
+			EXTAUX="vct"
+			EXTFOXBIN2PRG="vc2"
+			;;
+
+		pjx)
+			EXTAUX="pjt"
+			EXTFOXBIN2PRG="pj2"
+			;;
+
+		frx)
+			EXTAUX="frt"
+			EXTFOXBIN2PRG="fr2"
+			;;
+
+		lbx)
+			EXTAUX="lbt"
+			EXTFOXBIN2PRG="lb2"
+			;;
+
+		mnx)
+			EXTAUX="mnt"
+			EXTFOXBIN2PRG="mn2"
+			;;
+
+		dbx)
+			EXTAUX="dbt"
+			EXTFOXBIN2PRG="db2"
+			;;
+		
+		dcx)
+			EXTAUX="dct"
+			EXTFOXBIN2PRG="dc2"
+			;;
+
+		*)
+			rm -Rf "$TMPVFPGITDIR"
+			echo "ERROR: extension not supported"
+			exit -1
+			;;
+	esac
+
+	case "$2" in
+		aux)
+			echo "$EXTAUX"
+			;;
+		foxbin2prg)
+			echo "$EXTFOXBIN2PRG"
+			;;
+		*)
+			rm -Rf "$TMPVFPGITDIR"
+			echo "ERROR: extension option not supported"
+			exit -1
+			;;
+	esac
+
+}
+
+# Get commit id.
+if [ -z "$COMMITIDFROM" ]; then
+	COMMITIDFROM=$(git log --format="%H" -n 1 "$FILEREALPATH")
+	if [ $? -ne 0 ] || [ -z "$COMMITIDFROM" ]; then
 		rm -Rf "$TMPVFPGITDIR"
-		#echo "ERROR: file \"$TMP/$COMMITID/$FILENAME2\" does not exists in git"
+		echo "ERROR: empty commit id"
 		exit -1
-	fi	
+	fi
+fi
+
+EXTAUX=$(GetExt "$FILEEXT" "aux")
+
+FILEFROM=$(GetFiles "From" "$COMMITIDFROM" "$FILEREALPATH" "$EXTAUX")
+#echo "from: $FILEFROM"
+FILETO=$(GetFiles "To" "$COMMITIDTO" "$FILEREALPATH" "$EXTAUX")
+#echo "to: $FILETO"
+
+if ! [ -f "$FILEFROM" ] || ! [ -f "$FILETO" ]; then
+	rm -Rf "$TMPVFPGITDIR"
+	echo "ERROR: internal"
+	exit -1
+fi
+
+if ! [ -z "$EXTAUX" ]; then
+
+	EXTFOXBIN2PRG=$(GetExt "$FILEEXT" "foxbin2prg")
+
+	"$FOXBIN2PRG" BIN2PRG "$FILEFROM"
+	"$FOXBIN2PRG" BIN2PRG "$FILETO"
 	
-	"$FOXBIN2PRG" BIN2PRG "$TMPVFPGITDIR/local/$FILENAME"
-	"$FOXBIN2PRG" BIN2PRG "$TMPVFPGITDIR/$FILENAME"
-	
-	"$WINMERGE" "$TMPVFPGITDIR/local/$FILESTEM.$FILEEXT3" "$TMPVFPGITDIR/$FILESTEM.$FILEEXT3"
-	
+	"$WINMERGE"  "${FILEFROM%.*}.$EXTFOXBIN2PRG" "${FILETO%.*}.$EXTFOXBIN2PRG"
+
 else
 
-	"$WINMERGE" "$TMPVFPGITDIR/local/$FILENAME" "$TMPVFPGITDIR/$FILENAME"
-	
+	"$WINMERGE" "$FILEFROM" "$FILETO"
+
 fi
 
 rm -Rf "$TMPVFPGITDIR"
