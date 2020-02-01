@@ -1,0 +1,147 @@
+#!/bin/bash
+
+###############################################################################
+# VFPGITDIFF                                                                  #
+###############################################################################
+# Usage:                                                                      #
+#	vfpgitdiff <filename>                                                     #
+#                                                                             #
+# Remarks:                                                                    #
+#   WinMerge is required and configured in WINMERGE constant                  #
+#   FoxBin2Prg is required and configures in FOXBIN2PRG constant              #
+#                                                                             #
+###############################################################################
+
+WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
+FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
+
+FILEREALPATH=$(realpath "$1")
+if ! [ -f "$FILEREALPATH" ]; then
+    echo "ERROR: File does not exists"
+    exit -1
+fi
+
+FILEDIR=$(dirname "$FILEREALPATH")
+FILENAME=$(basename -- "$FILEREALPATH")
+FILESTEM="${FILENAME%.*}"
+FILEEXT="${FILENAME##*.}"
+FILEEXT="${FILEEXT,,}"
+
+#echo $FILEREALPATH
+#echo $FILEDIR
+#echo $FILENAME
+#echo $FILESTEM
+#echo $FILEEXT
+
+case "$FILEEXT" in
+
+    prg)
+        FILEEXT2=""
+        ;;
+		
+    txt)
+        FILEEXT2=""
+        ;;
+		
+	h)
+		FILEEXT2=""
+		;;
+
+    scx)
+        FILEEXT2="sct"
+		FILEEXT3="sc2"
+        ;;
+
+    vcx)
+        FILEEXT2="vct"
+		FILEEXT3="vc2"
+        ;;
+
+    pjx)
+        FILEEXT2="pjt"
+		FILEEXT3="pj2"
+        ;;
+
+    frx)
+        FILEEXT2="frt"
+		FILEEXT3="fr2"
+        ;;
+
+	lbx)
+        FILEEXT2="lbt"
+		FILEEXT3="lb2"
+        ;;
+
+    mnx)
+        FILEEXT2="mnt"
+		FILEEXT3="mn2"
+        ;;
+
+    dbx)
+        FILEEXT2="dbt"
+		FILEEXT3="db2"
+        ;;
+	
+    dcx)
+        FILEEXT2="dct"
+		FILEEXT3="dc2"
+        ;;
+
+    *)
+        echo "ERROR: extension not supported"
+        exit -1
+        ;;
+
+esac
+
+#echo $EXT0
+#echo $EXT1
+COMMITID=$(git log --format="%H" -n 1 "$FILEREALPATH")
+if [ $? -ne 0 ] || [ -z "$COMMITID" ]; then
+    echo "ERROR: empty commit id"
+    exit -1
+fi
+#echo $COMMITID
+
+TMPVFPGITDIR="$TMP/VFPGIT/$COMMITID"
+mkdir -p "$TMPVFPGITDIR/local"
+cp "$FILENAME" "$TMPVFPGITDIR/local/$FILENAME"
+git show $COMMITID:"$FILENAME" > "$TMPVFPGITDIR/$FILENAME"
+if [ $? -ne 0 ]; then
+	rm -Rf "$TMPVFPGITDIR"
+    #echo "ERROR: file \"$FILENAME\" does not exists in git"
+    exit -1
+fi
+
+if ! [ -z "$FILEEXT2" ]; then
+
+	FILENAME2=$(basename -- $(realpath $(find . -iname "$FILESTEM.$FILEEXT2")))
+
+	if ! [ -f "$FILENAME2" ]; then
+		rm -Rf "$TMPVFPGITDIR"
+		echo "ERROR: file \"$FILENAME2\" does not exists in disk"
+		exit -1
+	fi
+	
+	cp "$FILENAME2" "$TMPVFPGITDIR/local/$FILENAME2"
+    git show $COMMITID:"$FILENAME2" > "$TMPVFPGITDIR/$FILENAME2"
+	if [ $? -ne 0 ]; then
+		rm -Rf "$TMPVFPGITDIR"
+		#echo "ERROR: file \"$TMP/$COMMITID/$FILENAME2\" does not exists in git"
+		exit -1
+	fi	
+	
+	"$FOXBIN2PRG" BIN2PRG "$TMPVFPGITDIR/local/$FILENAME"
+	"$FOXBIN2PRG" BIN2PRG "$TMPVFPGITDIR/$FILENAME"
+	
+	"$WINMERGE" "$TMPVFPGITDIR/local/$FILESTEM.$FILEEXT3" "$TMPVFPGITDIR/$FILESTEM.$FILEEXT3"
+	
+else
+
+	"$WINMERGE" "$TMPVFPGITDIR/local/$FILENAME" "$TMPVFPGITDIR/$FILENAME"
+	
+fi
+
+rm -Rf "$TMPVFPGITDIR"
+
+exit 0
