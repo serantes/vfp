@@ -12,7 +12,12 @@
 #                                                                             #
 ###############################################################################
 
-#TODO: detect git root or error.
+# Detect root directory.
+ROOTDIR=$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')
+if ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
+	echo "Script must be run in git root directory"
+	exit -1
+fi
 
 WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
 FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
@@ -58,7 +63,6 @@ function GetFiles() {
 		if ! [ -z "$EXTAUX" ]; then
 			#TODO: duplicate file names in diferent directories.
 			#		find $PWD/subdir -iname
-			#local FILENAMEAUX=$(basename -- $(realpath $(find $PWD -iname "$FILESTEM.$EXTAUX")))
 			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
 
 			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
@@ -79,7 +83,6 @@ function GetFiles() {
 		if ! [ -z "$EXTAUX" ]; then
 			#TODO: duplicate file names in diferent directories.
 			#		find $PWD/subdir -iname
-			#local FILENAMEAUX=$(basename -- $(realpath $(find $PWD -iname "$FILESTEM.$EXTAUX")))
 			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
 
 			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
