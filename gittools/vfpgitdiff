@@ -14,9 +14,23 @@
 
 # Detect root directory.
 ROOTDIR=$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')
-if ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
-	echo "Script must be run in git root directory"
-	exit -1
+if [ ${PWD:0:1} == "/" ] && [ ${PWD:2:1} == "/" ]; then
+	if ! [ $(echo ${PWD:1:1} | tr '[:lower:]' '[:upper:]') == $(echo ${ROOTDIR:1:1} | tr '[:lower:]' '[:upper:]') ]	|| ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
+		
+		echo "Script must be run in git root directory"
+		exit -1
+	fi
+else
+	if ! [ "$PWD" == "$ROOTDIR" ]; then
+		echo "Script must be run in git root directory"
+		exit -1
+	fi
+fi
+
+
+if ! [ -f "$1" ]; then
+    echo "ERROR: File does not exists"
+    exit -1
 fi
 
 WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
@@ -25,10 +39,6 @@ COMMITIDFROM="$2"
 COMMITIDTO="$3"
 
 FILEREALPATH=$(realpath "$1")
-if ! [ -f "$FILEREALPATH" ]; then
-    echo "ERROR: File does not exists"
-    exit -1
-fi
 
 # Temp dir creation.
 TMPVFPGITDIR=$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)
