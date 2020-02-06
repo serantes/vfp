@@ -13,9 +13,9 @@
 ###############################################################################
 
 # Detect root directory.
-ROOTDIR=$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')
+ROOTDIR="$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')"
 if [ ${PWD:0:1} == "/" ] && [ ${PWD:2:1} == "/" ]; then
-	if ! [ $(echo ${PWD:1:1} | tr '[:lower:]' '[:upper:]') == $(echo ${ROOTDIR:1:1} | tr '[:lower:]' '[:upper:]') ]	|| ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
+	if ! [ $(echo "${PWD:1:1}" | tr '[:lower:]' '[:upper:]') == $(echo "${ROOTDIR:1:1}" | tr '[:lower:]' '[:upper:]') ]	|| ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
 		
 		echo "Script must be run in git root directory"
 		exit -1
@@ -35,17 +35,18 @@ fi
 
 WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
 FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
+FOXBIN2PRGSUFFIX='2'
 COMMITIDFROM="$2"
 COMMITIDTO="$3"
 
-FILEREALPATH=$(realpath "$1")
+FILEREALPATH="$(realpath "$1")"
 
 # Temp dir creation.
-TMPVFPGITDIR=$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)
+TMPVFPGITDIR="$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)"
 
 # Parse filename.
-#FILEDIR=$(dirname "$FILEREALPATH")
-FILENAME=$(basename -- "$FILEREALPATH")
+#FILEDIR="$(dirname "$FILEREALPATH")"
+FILENAME="$(basename -- "$FILEREALPATH")"
 #FILESTEM="${FILENAME%.*}"
 FILEEXT="${FILENAME##*.}"
 if [ "$FILENAME" == "$FILEEXT" ]; then
@@ -62,7 +63,7 @@ function GetFiles() {
 	
 	local OUTDIR="$TMPVFPGITDIR/$TYPE"
 
-	local FILENAME=$(basename -- "$FILEFULLPATH")
+	local FILENAME="$(basename -- "$FILEFULLPATH")"
 	local FILESTEM="${FILENAME%.*}"
 		
 	mkdir -p "$OUTDIR"
@@ -73,8 +74,7 @@ function GetFiles() {
 		if ! [ -z "$EXTAUX" ]; then
 			#TODO: duplicate file names in diferent directories.
 			#		find $PWD/subdir -iname
-			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
-
+			local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
 			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
 				rm -Rf "$TMPVFPGITDIR"
 				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk3"
@@ -93,8 +93,7 @@ function GetFiles() {
 		if ! [ -z "$EXTAUX" ]; then
 			#TODO: duplicate file names in diferent directories.
 			#		find $PWD/subdir -iname
-			local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILESTEM.$EXTAUX"))
-
+			local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
 			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
 				rm -Rf "$TMPVFPGITDIR"
 				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk."
@@ -104,7 +103,7 @@ function GetFiles() {
 			git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
 		fi
 
-		local FILENAMEAUX=$(realpath --relative-to="$PWD" $(find "$PWD" -iname "$FILENAME"))
+		local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILENAME")")"
 		if ! [ -f "$PWD/$FILENAMEAUX" ]; then
 			rm -Rf "$TMPVFPGITDIR"
 			echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk.1"
@@ -146,42 +145,42 @@ function GetExt() {
 
 		scx)
 			EXTAUX="sct"
-			EXTFOXBIN2PRG="sc2"
+			EXTFOXBIN2PRG="sc$FOXBIN2PRGSUFFIX"
 			;;
 
 		vcx)
 			EXTAUX="vct"
-			EXTFOXBIN2PRG="vc2"
+			EXTFOXBIN2PRG="vc$FOXBIN2PRGSUFFIX"
 			;;
 
 		pjx)
 			EXTAUX="pjt"
-			EXTFOXBIN2PRG="pj2"
+			EXTFOXBIN2PRG="pj$FOXBIN2PRGSUFFIX"
 			;;
 
 		frx)
 			EXTAUX="frt"
-			EXTFOXBIN2PRG="fr2"
+			EXTFOXBIN2PRG="fr$FOXBIN2PRGSUFFIX"
 			;;
 
 		lbx)
 			EXTAUX="lbt"
-			EXTFOXBIN2PRG="lb2"
+			EXTFOXBIN2PRG="lb$FOXBIN2PRGSUFFIX"
 			;;
 
 		mnx)
 			EXTAUX="mnt"
-			EXTFOXBIN2PRG="mn2"
+			EXTFOXBIN2PRG="mn$FOXBIN2PRGSUFFIX"
 			;;
 
 		dbx)
 			EXTAUX="dbt"
-			EXTFOXBIN2PRG="db2"
+			EXTFOXBIN2PRG="db$FOXBIN2PRGSUFFIX"
 			;;
 		
 		dcx)
 			EXTAUX="dct"
-			EXTFOXBIN2PRG="dc2"
+			EXTFOXBIN2PRG="dc$FOXBIN2PRGSUFFIX"
 			;;
 
 		*)
