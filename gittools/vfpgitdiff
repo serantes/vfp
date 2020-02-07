@@ -12,34 +12,32 @@
 #                                                                             #
 ###############################################################################
 
-# Detect root directory.
-ROOTDIR="$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')"
-if [ ${PWD:0:1} == "/" ] && [ ${PWD:2:1} == "/" ]; then
-	if ! [ $(echo "${PWD:1:1}" | tr '[:lower:]' '[:upper:]') == $(echo "${ROOTDIR:1:1}" | tr '[:lower:]' '[:upper:]') ]	|| ! [ "${PWD:2}" == "${ROOTDIR:2}" ]; then
-		
-		echo "Script must be run in git root directory"
-		exit -1
-	fi
-else
-	if ! [ "$PWD" == "$ROOTDIR" ]; then
-		echo "Script must be run in git root directory"
-		exit -1
-	fi
-fi
-
-
+# File exists?
 if ! [ -f "$1" ]; then
     echo "ERROR: File does not exists"
     exit -1
 fi
+# Get file real full path.
+FILEREALPATH="$(realpath "$1")"
+# Get file directory.
+FILEDIR="$(dirname "$FILEREALPATH")"
 
+# Must cd to file location.
+pushd . > /dev/null
+cd "$FILEDIR"
+
+# Must cd to git root directory.
+ROOTDIR="$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')"
+cd "$ROOTDIR"
+
+# Cfg.
 WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
-FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
-FOXBIN2PRGSUFFIX='2'
+FOXBIN2PRG="/C/Users/joseisi/Development/Desarrollos/EntornosComun/Utilidades/vfp/Foxbin2prg/foxbin2prg.exe"
+FOXBIN2PRGSUFFIX='a'
+
+# Commit Id parameters.
 COMMITIDFROM="$2"
 COMMITIDTO="$3"
-
-FILEREALPATH="$(realpath "$1")"
 
 # Temp dir creation.
 TMPVFPGITDIR="$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)"
@@ -50,170 +48,165 @@ FILENAME="$(basename -- "$FILEREALPATH")"
 #FILESTEM="${FILENAME%.*}"
 FILEEXT="${FILENAME##*.}"
 if [ "$FILENAME" == "$FILEEXT" ]; then
-	FILEEXT=""
+    FILEEXT=""
 else
-	FILEEXT="${FILEEXT,,}"
+    FILEEXT="${FILEEXT,,}"
 fi
 
 function GetFiles() {
-	local TYPE="$1"
-	local COMMITID="$2"
-	local FILEFULLPATH="$3"
-	local EXTAUX="$4"
-	
-	local OUTDIR="$TMPVFPGITDIR/$TYPE"
+    local TYPE="$1"
+    local COMMITID="$2"
+    local FILEFULLPATH="$3"
+    local EXTAUX="$4"
+    
+    local OUTDIR="$TMPVFPGITDIR/$TYPE"
 
-	local FILENAME="$(basename -- "$FILEFULLPATH")"
-	local FILESTEM="${FILENAME%.*}"
-		
-	mkdir -p "$OUTDIR"
-	if [ -z "$COMMITID" ]; then
-	
-		# No COMMITID, then get local version.
-		
-		if ! [ -z "$EXTAUX" ]; then
-			#TODO: duplicate file names in diferent directories.
-			#		find $PWD/subdir -iname
-			local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
-			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-				rm -Rf "$TMPVFPGITDIR"
-				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk3"
-				exit -1
-			fi
-			
-			cp "$FILENAMEAUX" "$OUTDIR/$(basename -- "$FILENAMEAUX")"
-		fi
+    local FILENAME="$(basename -- "$FILEFULLPATH")"
+    local FILESTEM="${FILENAME%.*}"
 
-		cp "$FILEFULLPATH" "$OUTDIR/$FILENAME"
-		
-	else
-	
-		# Get COMMIT ID version.
-		
-		if ! [ -z "$EXTAUX" ]; then
-			#TODO: duplicate file names in diferent directories.
-			#		find $PWD/subdir -iname
-			local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
-			if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-				rm -Rf "$TMPVFPGITDIR"
-				echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk."
-				exit -1
-			fi
+    mkdir -p "$OUTDIR"
+    if [ -z "$COMMITID" ]; then
+    
+        # No COMMITID, get local version.
+        
+        if ! [ -z "$EXTAUX" ]; then
+            #TODO: duplicate file names in diferent directories.
+            #       find $PWD/subdir -iname
+            local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
+            if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+                echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk3"
+                exit -1
+            fi
+            
+            cp "$FILENAMEAUX" "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+        fi
 
-			git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
-		fi
+        cp "$FILEFULLPATH" "$OUTDIR/$FILENAME"
+        
+    else
+    
+        # Get COMMIT ID version.
+        if ! [ -z "$EXTAUX" ]; then
+            #TODO: duplicate file names in diferent directories.
+            #       find $PWD/subdir -iname
+            local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
+            if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+                echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk."
+                exit -1
+            fi
 
-		local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILENAME")")"
-		if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-			rm -Rf "$TMPVFPGITDIR"
-			echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk.1"
-			exit -1
-		fi
+            git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+        fi
 
-		git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$FILENAME"
-	
-	fi
-	
-	echo "$OUTDIR/$FILENAME"
-	
+        local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILENAME")")"
+        if ! [ -f "$PWD/$FILENAMEAUX" ]; then
+            echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk.1"
+            exit -1
+        fi
+
+        git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$FILENAME"
+    
+    fi
+    
+    echo "$OUTDIR/$FILENAME"
+    
 }
 
 function GetExt() {
-	local EXTAUX=''
-	local EXTFOXBIN2PRG=''
-	
-	if [ -z "$1" ]; then
-		echo ""
-		exit 0
-	fi
-	
-	case "$1" in
+    local EXTAUX=''
+    local EXTFOXBIN2PRG=''
+    
+    if [ -z "$1" ]; then
+        echo ""
+        exit 0
+    fi
+    
+    case "$1" in
 
-		prg)
-			EXTAUX=""
-			EXTFOXBIN2PRG=""
-			;;
-			
-		txt)
-			EXTAUX=""
-			EXTFOXBIN2PRG=""
-			;;
-			
-		h)
-			EXTAUX=""
-			;;
+        prg)
+            EXTAUX=""
+            EXTFOXBIN2PRG=""
+            ;;
+            
+        txt)
+            EXTAUX=""
+            EXTFOXBIN2PRG=""
+            ;;
+            
+        h)
+            EXTAUX=""
+            ;;
 
-		scx)
-			EXTAUX="sct"
-			EXTFOXBIN2PRG="sc$FOXBIN2PRGSUFFIX"
-			;;
+        scx)
+            EXTAUX="sct"
+            EXTFOXBIN2PRG="sc$FOXBIN2PRGSUFFIX"
+            ;;
 
-		vcx)
-			EXTAUX="vct"
-			EXTFOXBIN2PRG="vc$FOXBIN2PRGSUFFIX"
-			;;
+        vcx)
+            EXTAUX="vct"
+            EXTFOXBIN2PRG="vc$FOXBIN2PRGSUFFIX"
+            ;;
 
-		pjx)
-			EXTAUX="pjt"
-			EXTFOXBIN2PRG="pj$FOXBIN2PRGSUFFIX"
-			;;
+        pjx)
+            EXTAUX="pjt"
+            EXTFOXBIN2PRG="pj$FOXBIN2PRGSUFFIX"
+            ;;
 
-		frx)
-			EXTAUX="frt"
-			EXTFOXBIN2PRG="fr$FOXBIN2PRGSUFFIX"
-			;;
+        frx)
+            EXTAUX="frt"
+            EXTFOXBIN2PRG="fr$FOXBIN2PRGSUFFIX"
+            ;;
 
-		lbx)
-			EXTAUX="lbt"
-			EXTFOXBIN2PRG="lb$FOXBIN2PRGSUFFIX"
-			;;
+        lbx)
+            EXTAUX="lbt"
+            EXTFOXBIN2PRG="lb$FOXBIN2PRGSUFFIX"
+            ;;
 
-		mnx)
-			EXTAUX="mnt"
-			EXTFOXBIN2PRG="mn$FOXBIN2PRGSUFFIX"
-			;;
+        mnx)
+            EXTAUX="mnt"
+            EXTFOXBIN2PRG="mn$FOXBIN2PRGSUFFIX"
+            ;;
 
-		dbx)
-			EXTAUX="dbt"
-			EXTFOXBIN2PRG="db$FOXBIN2PRGSUFFIX"
-			;;
-		
-		dcx)
-			EXTAUX="dct"
-			EXTFOXBIN2PRG="dc$FOXBIN2PRGSUFFIX"
-			;;
+        dbx)
+            EXTAUX="dbt"
+            EXTFOXBIN2PRG="db$FOXBIN2PRGSUFFIX"
+            ;;
+        
+        dcx)
+            EXTAUX="dct"
+            EXTFOXBIN2PRG="dc$FOXBIN2PRGSUFFIX"
+            ;;
 
-		*)
-			rm -Rf "$TMPVFPGITDIR"
-			echo "ERROR: extension not supported"
-			exit -1
-			;;
-	esac
+        *)
+            EXTAUX=""
+            EXTFOXBIN2PRG=""
+            ;;
+    esac
 
-	case "$2" in
-		aux)
-			echo "$EXTAUX"
-			;;
-		foxbin2prg)
-			echo "$EXTFOXBIN2PRG"
-			;;
-		*)
-			rm -Rf "$TMPVFPGITDIR"
-			echo "ERROR: extension option not supported"
-			exit -1
-			;;
-	esac
+    case "$2" in
+        aux)
+            echo "$EXTAUX"
+            ;;
+        foxbin2prg)
+            echo "$EXTFOXBIN2PRG"
+            ;;
+        *)
+            echo "ERROR: extension option not supported"
+            exit -1
+            ;;
+    esac
 
 }
 
 # Get commit id.
 if [ -z "$COMMITIDFROM" ]; then
-	COMMITIDFROM=$(git log --format="%H" -n 1 "$FILEREALPATH")
-	if [ $? -ne 0 ] || [ -z "$COMMITIDFROM" ]; then
-		rm -Rf "$TMPVFPGITDIR"
-		echo "ERROR: empty commit id"
-		exit -1
-	fi
+    COMMITIDFROM=$(git log --format="%H" -n 1 "$FILEREALPATH")
+    if [ $? -ne 0 ] || [ -z "$COMMITIDFROM" ]; then
+        echo "ERROR: empty commit id"
+        rm -Rf "$TMPVFPGITDIR"
+        popd > /dev/null
+        exit -1
+    fi
 fi
 
 EXTAUX=$(GetExt "$FILEEXT" "aux")
@@ -224,26 +217,27 @@ FILETO=$(GetFiles "To" "$COMMITIDTO" "$FILEREALPATH" "$EXTAUX")
 #echo "to: $FILETO"
 
 if ! [ -f "$FILEFROM" ] || ! [ -f "$FILETO" ]; then
-	rm -Rf "$TMPVFPGITDIR"
-	echo "ERROR: internal"
-	exit -1
+    echo "ERROR: internal"
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
 fi
 
 if ! [ -z "$EXTAUX" ]; then
 
-	EXTFOXBIN2PRG=$(GetExt "$FILEEXT" "foxbin2prg")
+    EXTFOXBIN2PRG=$(GetExt "$FILEEXT" "foxbin2prg")
 
-	"$FOXBIN2PRG" BIN2PRG "$FILEFROM"
-	"$FOXBIN2PRG" BIN2PRG "$FILETO"
-	
-	"$WINMERGE"  "${FILEFROM%.*}.$EXTFOXBIN2PRG" "${FILETO%.*}.$EXTFOXBIN2PRG"
+    "$FOXBIN2PRG" BIN2PRG "$FILEFROM"
+    "$FOXBIN2PRG" BIN2PRG "$FILETO"
+    
+    "$WINMERGE"  "${FILEFROM%.*}.$EXTFOXBIN2PRG" "${FILETO%.*}.$EXTFOXBIN2PRG"
 
 else
 
-	"$WINMERGE" "$FILEFROM" "$FILETO"
+    "$WINMERGE" "$FILEFROM" "$FILETO"
 
 fi
 
 rm -Rf "$TMPVFPGITDIR"
-
+popd > /dev/null
 exit 0
