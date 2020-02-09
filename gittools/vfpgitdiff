@@ -1,39 +1,91 @@
 #!/bin/bash
 
 ###############################################################################
-# VFPGITDIFF                                                                  #
+# VFPGitDiff v1.0, by Ignacio Serantes                                        #
 ###############################################################################
 # Usage:                                                                      #
-#	vfpgitdiff <filename>                                                     #
+#   vfpgitdiff <filename> [ commit_id_from [ commit_id_to ] ]                 #
+#                                                                             #
+# Options:                                                                    #
+#   filename        - required, working file name                             #
+#   commit_id_from  - optional, by default last commit id is used             #
+#   commit_id_to    - optional, by default local file is used                 #
 #                                                                             #
 # Remarks:                                                                    #
-#   WinMerge is required and configured in WINMERGE constant                  #
-#   FoxBin2Prg is required and configures in FOXBIN2PRG constant              #
+#   - WinMerge is required and configured in WINMERGE constant.               #
+#   - FoxBin2Prg is required and configured in FOXBIN2PRG constant.           #
+#   - Changes made in WinMerge's right panel will update local files.         #
+#     Disable this feature with UPDATEONCHANGE=0.                             #
 #                                                                             #
 ###############################################################################
+# History:                                                                    #
+#   2020-02-09 - First version v1.0                                           #
+#                                                                             #
+###############################################################################
+
+#
+# Script configuration.
+#
+PRGNAME="VFGGitDiff"
+PRGAUTHOR="Ignacio Serantes"
+PRGVERSION="1"
+PRGSUBVERSION="0"
+WINMERGE="/c/Program Files/WinMerge/WinMergeU.exe"
+FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
+FOXBIN2PRGSUFFIX='2'
+#FOXBIN2PRGSUFFIX='a'
+UPDATEONCHANGE=1
+#UPDATEONCHANGE=0
+
+
+#
+# Initialización and parameters parsing.
+#
+
+# No parameters then help.
+if [ -z "$1" ]; then
+    echo $0
+    echo "$PRGNAME v$PRGVERSION.$PRGSUBVERSION by $PRGAUTHOR
+    
+Usage:
+    $(basename "$(test -L "$0" && readlink "$0" || echo "$0")") <filename> [ commit_id_from [ commit_id_to ] ]
+    
+Options:
+    filename        - required,  working file name
+    commit_id_from  - optional, by default last commit id is used
+    commit_id_to    - optional, by default local file is used
+    
+Remarks:
+    - WinMerge and FoxBin2Prg are required."
+    
+    if [ $UPDATEONCHANGE == 1 ]; then
+        echo "    - Changes made in WinMerge's right panel will update local files."
+    fi
+    exit 0
+fi
 
 # File exists?
 if ! [ -f "$1" ]; then
-    echo "ERROR: File does not exists"
+    echo "ERROR: File does not exists."
     exit -1
 fi
-# Get file real full path.
+
+# Get file real path.
 FILEREALPATH="$(realpath "$1")"
 # Get file directory.
-FILEDIR="$(dirname "$FILEREALPATH")"
+FILEREALDIR="$(dirname "$FILEREALPATH")"
 
-# Must cd to file location.
+# Must cd to file location to obtain git root directory.
 pushd . > /dev/null
-cd "$FILEDIR"
+cd "$FILEREALDIR"
 
-# Must cd to git root directory.
-ROOTDIR="$(echo /$(git rev-parse --show-toplevel) | sed -e 's/\\/\//g' -e 's/://')"
-cd "$ROOTDIR"
-
-# Cfg.
-WINMERGE="/C/Program Files/WinMerge/WinMergeU.exe"
-FOXBIN2PRG="/C/Users/joseisi/Development/Desarrollos/EntornosComun/Utilidades/vfp/Foxbin2prg/foxbin2prg.exe"
-FOXBIN2PRGSUFFIX='a'
+# Must cd to git root directory to work.
+GITROOTDIR="$(echo /$(git rev-parse --show-toplevel 2> /dev/null) | sed -e 's/^.\+\:/\L&/g' | sed -e 's/\\/\//g' -e 's/://')"
+if [ "$GITROOTDIR" == "/" ]; then
+    echo "ERROR: there is no git repository."
+    exit -1
+fi
+cd "$GITROOTDIR"
 
 # Commit Id parameters.
 COMMITIDFROM="$2"
@@ -43,9 +95,8 @@ COMMITIDTO="$3"
 TMPVFPGITDIR="$(mktemp -d $TMP/VFPGIT.XXXXXXXXX)"
 
 # Parse filename.
-#FILEDIR="$(dirname "$FILEREALPATH")"
 FILENAME="$(basename -- "$FILEREALPATH")"
-#FILESTEM="${FILENAME%.*}"
+FILESTEM="${FILENAME%.*}"
 FILEEXT="${FILENAME##*.}"
 if [ "$FILENAME" == "$FILEEXT" ]; then
     FILEEXT=""
@@ -53,66 +104,39 @@ else
     FILEEXT="${FILEEXT,,}"
 fi
 
-function GetFiles() {
-    local TYPE="$1"
-    local COMMITID="$2"
-    local FILEFULLPATH="$3"
-    local EXTAUX="$4"
-    
-    local OUTDIR="$TMPVFPGITDIR/$TYPE"
 
-    local FILENAME="$(basename -- "$FILEFULLPATH")"
-    local FILESTEM="${FILENAME%.*}"
+#
+# Script functions.
+# 
 
-    mkdir -p "$OUTDIR"
-    if [ -z "$COMMITID" ]; then
-    
-        # No COMMITID, get local version.
-        
-        if ! [ -z "$EXTAUX" ]; then
-            #TODO: duplicate file names in diferent directories.
-            #       find $PWD/subdir -iname
-            local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
-            if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-                echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk3"
-                exit -1
-            fi
-            
-            cp "$FILENAMEAUX" "$OUTDIR/$(basename -- "$FILENAMEAUX")"
-        fi
-
-        cp "$FILEFULLPATH" "$OUTDIR/$FILENAME"
-        
-    else
-    
-        # Get COMMIT ID version.
-        if ! [ -z "$EXTAUX" ]; then
-            #TODO: duplicate file names in diferent directories.
-            #       find $PWD/subdir -iname
-            local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILESTEM.$EXTAUX")")"
-            if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-                echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk."
-                exit -1
-            fi
-
-            git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
-        fi
-
-        local FILENAMEAUX="$(realpath --relative-to="$PWD" "$(find "$PWD" -iname "$FILENAME")")"
-        if ! [ -f "$PWD/$FILENAMEAUX" ]; then
-            echo "ERROR: file \"$FILENAMEAUX\" does not exists in disk.1"
-            exit -1
-        fi
-
-        git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$FILENAME"
-    
+# Check configuration.
+function CfgCheck {
+    # Git.
+    local OUTPUT=$(ls .git)
+    OUTPUT=$(git --version 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        echo "ERROR: git is not installed."
+        exit -1
     fi
     
-    echo "$OUTDIR/$FILENAME"
+    # WinMerge.
+    if ! [ -f "$WINMERGE" ]; then
+        echo "ERROR: WINMERGE constant is incorrectly configured."
+        exit -1
+    fi
     
+    # FoxBin2Prg.
+    if ! [ -f "$FOXBIN2PRG" ]; then
+        echo "ERROR: FOXBIN2PRG constant is incorrectly configured."
+        exit -1
+    fi
+
+    exit 0
 }
 
+# This function returns right extension for three cases: "ext", "aux" and "foxbin2prg".
 function GetExt() {
+    local EXT=''
     local EXTAUX=''
     local EXTFOXBIN2PRG=''
     
@@ -124,120 +148,301 @@ function GetExt() {
     case "$1" in
 
         prg)
+            EXT="$1"
             EXTAUX=""
             EXTFOXBIN2PRG=""
             ;;
             
         txt)
+            EXT="$1"
             EXTAUX=""
             EXTFOXBIN2PRG=""
             ;;
             
         h)
+            EXT="$1"
             EXTAUX=""
+            EXTFOXBIN2PRG=""
             ;;
 
-        scx)
+        sc[xt])
+            EXT="scx"
             EXTAUX="sct"
             EXTFOXBIN2PRG="sc$FOXBIN2PRGSUFFIX"
             ;;
 
-        vcx)
+        vc[xt])
+            EXT="vcx"
             EXTAUX="vct"
             EXTFOXBIN2PRG="vc$FOXBIN2PRGSUFFIX"
             ;;
 
-        pjx)
+        pj[xt])
+            EXT="pjx"
             EXTAUX="pjt"
             EXTFOXBIN2PRG="pj$FOXBIN2PRGSUFFIX"
             ;;
 
-        frx)
+        fr[xt])
+            EXT="frx"
             EXTAUX="frt"
             EXTFOXBIN2PRG="fr$FOXBIN2PRGSUFFIX"
             ;;
 
-        lbx)
+        lb[xt])
+            EXT="lbx"
             EXTAUX="lbt"
             EXTFOXBIN2PRG="lb$FOXBIN2PRGSUFFIX"
             ;;
 
-        mnx)
+        mn[xt])
+            EXT="mnx"
             EXTAUX="mnt"
             EXTFOXBIN2PRG="mn$FOXBIN2PRGSUFFIX"
             ;;
 
-        dbx)
+        db[xt])
+            EXT="dbx"
             EXTAUX="dbt"
             EXTFOXBIN2PRG="db$FOXBIN2PRGSUFFIX"
             ;;
         
-        dcx)
+        dc[xt])
+            EXT="dcx"
             EXTAUX="dct"
             EXTFOXBIN2PRG="dc$FOXBIN2PRGSUFFIX"
             ;;
 
         *)
+            EXT="$1"
             EXTAUX=""
             EXTFOXBIN2PRG=""
             ;;
     esac
 
     case "$2" in
+        ext)
+            echo "$EXT"
+            ;;
+            
         aux)
             echo "$EXTAUX"
             ;;
+            
         foxbin2prg)
             echo "$EXTFOXBIN2PRG"
             ;;
+            
         *)
             echo "ERROR: extension option not supported"
             exit -1
             ;;
     esac
-
 }
 
-# Get commit id.
+# This function get all required files and store it in a temporary directory.ç
+function GetFiles() {
+    local TYPE="$1"
+    local COMMITID="$2"
+    local FILEFULLPATH="$3"
+    local EXT="$4"
+    local EXTAUX="$5"
+    
+    local OUTDIR="$TMPVFPGITDIR/$TYPE"
+
+    local FILEDIR="$(dirname "$FILEFULLPATH")"
+    local FILENAME="$(basename -- "$FILEFULLPATH")"
+    local FILESTEM="${FILENAME%.*}"
+    
+    if ! [ -z "$EXT" ]; then
+        EXT=".$EXT"
+    fi
+    
+    mkdir -p "$OUTDIR"
+    if [ -z "$COMMITID" ]; then
+    
+        # No COMMITID, get local version.
+        
+        if ! [ -z "$EXTAUX" ]; then
+            # Get real filename relative to current path.
+            local FILENAMEAUX="$(GetRealFileName "$PWD" "$FILEDIR" "$FILESTEM.$EXTAUX")"
+            if [ $? -ne 0 ]; then
+                echo "$FILENAMEAUX"
+                exit -1
+            fi
+            
+            cp "$FILENAMEAUX" "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+        fi
+
+        cp "$FILEDIR/$FILESTEM$EXT" "$OUTDIR/$FILESTEM$EXT"
+        
+    else
+    
+        # Get COMMIT ID version.
+        if ! [ -z "$EXTAUX" ]; then
+            # Get real filename relative to current path.
+            local FILENAMEAUX="$(GetRealFileName "$PWD" "$FILEDIR" "$FILESTEM.$EXTAUX")"
+            if [ $? -ne 0 ]; then
+                echo "$FILENAMEAUX"
+                exit -1
+            fi
+
+            git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+        fi
+
+        # Get real filename relative to current path.
+        local FILENAMEAUX="$(GetRealFileName "$PWD" "$FILEDIR" "$FILESTEM$EXT")"
+        if [ $? -ne 0 ]; then
+            echo "$FILENAMEAUX"
+            exit -1
+        fi
+
+        git show $COMMITID:"$FILENAMEAUX" > "$OUTDIR/$(basename -- "$FILENAMEAUX")"
+    
+    fi
+    
+    echo "$OUTDIR/$FILESTEM$EXT"
+    exit 0
+    
+}
+
+# Get real filename relative to path.
+function GetRealFileName() {
+    local REALFILENAME="$(realpath --relative-to="$1" "$(find "$2" -maxdepth 1 -iname "$3")")"
+    if ! [ -f "$1/$REALFILENAME" ]; then
+        echo "ERROR: file \"$1/$REALFILENAME\" does not exists in disk."
+        exit -1
+    fi
+    
+    echo "$REALFILENAME"
+    exit 0
+}
+
+
+#
+# Main.
+#
+
+# Check configuration.
+MSJERROR=$(CfgCheck)
+if [ $? -ne 0 ]; then
+    echo "$MSJERROR"
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
+fi
+
+# Get commit from id.
 if [ -z "$COMMITIDFROM" ]; then
     COMMITIDFROM=$(git log --format="%H" -n 1 "$FILEREALPATH")
     if [ $? -ne 0 ] || [ -z "$COMMITIDFROM" ]; then
-        echo "ERROR: empty commit id"
+        echo "ERROR: empty commit id."
         rm -Rf "$TMPVFPGITDIR"
         popd > /dev/null
         exit -1
     fi
 fi
 
-EXTAUX=$(GetExt "$FILEEXT" "aux")
-
-FILEFROM=$(GetFiles "From" "$COMMITIDFROM" "$FILEREALPATH" "$EXTAUX")
-#echo "from: $FILEFROM"
-FILETO=$(GetFiles "To" "$COMMITIDTO" "$FILEREALPATH" "$EXTAUX")
-#echo "to: $FILETO"
-
-if ! [ -f "$FILEFROM" ] || ! [ -f "$FILETO" ]; then
-    echo "ERROR: internal"
+FILEEXT=$(GetExt "$FILEEXT" "ext")
+if [ $? -ne 0 ]; then
+    echo "ERROR: unknown extension parameter."
     rm -Rf "$TMPVFPGITDIR"
     popd > /dev/null
     exit -1
 fi
 
+EXTAUX=$(GetExt "$FILEEXT" "aux")
+if [ $? -ne 0 ]; then
+    echo "ERROR: unknown extension parameter."
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
+fi
+
+FILEFROM=$(GetFiles "From" "$COMMITIDFROM" "$FILEREALPATH" "$FILEEXT" "$EXTAUX")
+#echo "from: $FILEFROM"
+if [ $? -ne 0 ]; then
+    echo "ERROR: problem getting \"from\" file \"$FILEREALPATH\"."
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
+fi
+
+FILETO=$(GetFiles "To" "$COMMITIDTO" "$FILEREALPATH" "$FILEEXT" "$EXTAUX")
+#echo "to: $FILETO"
+if [ $? -ne 0 ]; then
+    echo "ERROR: problem getting \"to\" file \"$FILEREALPATH\"."
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
+fi
+
+# FILEFROM and FILETO must exists.
+if ! [ -f "$FILEFROM" ] || ! [ -f "$FILETO" ]; then
+    echo "ERROR: internal."
+    rm -Rf "$TMPVFPGITDIR"
+    popd > /dev/null
+    exit -1
+fi
+
+# Handle Visual FoxPro binary elements with two files (classlib, forms, etc...).
 if ! [ -z "$EXTAUX" ]; then
 
     EXTFOXBIN2PRG=$(GetExt "$FILEEXT" "foxbin2prg")
-
+    if [ $? -ne 0 ]; then
+        echo "ERROR: unknown extension."
+        rm -Rf "$TMPVFPGITDIR"
+        popd > /dev/null
+        exit -1
+    fi
+    
     "$FOXBIN2PRG" BIN2PRG "$FILEFROM"
     "$FOXBIN2PRG" BIN2PRG "$FILETO"
     
+    LTIME=$(stat -c %Z "${FILETO%.*}.$EXTFOXBIN2PRG")
     "$WINMERGE"  "${FILEFROM%.*}.$EXTFOXBIN2PRG" "${FILETO%.*}.$EXTFOXBIN2PRG"
+    ATIME=$(stat -c %Z "${FILETO%.*}.$EXTFOXBIN2PRG")
 
 else
 
+    LTIME=$(stat -c %Z "$FILETO")
     "$WINMERGE" "$FILEFROM" "$FILETO"
+    ATIME=$(stat -c %Z "$FILETO")
 
 fi
 
+# If "to" file changed local file(s) must be updated.
+if [ $UPDATEONCHANGE -eq 1 ] && [[ "$ATIME" != "$LTIME" ]]; then
+
+    # Handle Visual FoxPro binary elements with two files (classlib, forms, etc...).
+    if ! [ -z "$EXTAUX" ]; then
+
+        "$FOXBIN2PRG" PRG2BIN "${FILETO%.*}.$EXTFOXBIN2PRG"
+
+        FILENAMEAUX="$(GetRealFileName "$PWD" "$FILEREALDIR" "$FILESTEM.$EXTAUX")"
+        if [ $? -ne 0 ]; then
+            echo "$FILENAMEAUX"
+            exit -1
+        fi
+
+        mv "$FILENAMEAUX" "$FILENAMEAUX.bak"
+        cp "${FILETO%.*}.$EXTAUX" "$FILENAMEAUX"
+    
+    fi
+
+    FILENAMEAUX="$(GetRealFileName "$PWD" "$FILEREALDIR" "$FILESTEM.$FILEEXT")"
+    if [ $? -ne 0 ]; then
+        echo "$FILENAMEAUX"
+        exit -1
+    fi
+
+    mv "$FILENAMEAUX" "$FILENAMEAUX.bak"
+    cp "$FILETO" "$FILENAMEAUX"
+    echo "File \"$FILENAMEAUX\" updated."
+    
+fi
+
+# Cleanup.
 rm -Rf "$TMPVFPGITDIR"
 popd > /dev/null
 exit 0
