@@ -30,7 +30,7 @@
 PRG_NAME="VFGGitDiff"
 PRG_AUTHOR="Ignacio Serantes"
 PRG_VERSION="1"
-PRG_RELEASE="01"
+PRG_RELEASE="02"
 BIN_WINMERGE="/c/Program Files/WinMerge/WinMergeU.exe"
 BIN_FOXBIN2PRG="/c/Users/ignacio/Apps/vfpx/foxbin2prg/foxbin2prg.exe"
 
@@ -52,15 +52,16 @@ Usage:
     $(basename "$(test -L "$0" && readlink "$0" || echo "$0")") <filename> [ commit_id_from [ commit_id_to ] ]
     
 Options:
-    filename        - required, working file name
-    commit_id_from  - optional, by default last commit id is used
-    commit_id_to    - optional, by default local file is used
+    filename        - required, working file name.
+    commit_id_from  - optional, by default last commit id is used.
+    commit_id_to    - optional, by default local file is used.
     
 Remarks:
     - WinMerge and FoxBin2Prg are required."
     
     if [ $UPDATEONCHANGE == 1 ]; then
         echo "    - Changes made in WinMerge's right panel will update local files."
+        echo "    - Changes made in WinMerge's left panel will be ignored."
     fi
     exit 0
 fi
