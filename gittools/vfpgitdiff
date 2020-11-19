@@ -27,7 +27,7 @@
 #
 # Script configuration.
 #
-PRG_NAME="VFGGitDiff"
+PRG_NAME="VFPGitDiff"
 PRG_AUTHOR="Ignacio Serantes"
 PRG_VERSION="1"
 PRG_RELEASE="02"
