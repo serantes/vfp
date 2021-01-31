@@ -8,6 +8,7 @@
 *.xls
 *.log
 _*.*
+_devel
 Thumbs.*
 third-parties/vfplang.txt
 third-parties/vfplang.xml
