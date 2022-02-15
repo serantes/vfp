@@ -29,6 +29,11 @@
 *-- mngrGrid class.
 *--
 
+*-- mngrGrid component basic constants.
+#DEFINE	c_MNGRGRID_SUPPORTED_CLASS_LIST		'Grid'
+#DEFINE	c_MNGRGRID_VERSION					'0.9.4'
+#DEFINE	c_MNGRGRID_UUID						'26ea386b-1569-4526-a6c4-edf45379c9ee'
+
 *-- mngrGrid autosize.
 #DEFINE	c_MNGRGRID_AUTOSIZE_ALL				0
 #DEFINE	c_MNGRGRID_AUTOSIZE_EXCEPT			1
